@@ -1,1016 +1,905 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
     <title>LED Cube Pattern Generation Tool</title>
-    <link type="text/css" href="http://code.jquery.com/ui/1.10.0/themes/smoothness/jquery-ui.css"
-        rel="stylesheet" />
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
-    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.js"></script>
-    <script type="text/javascript" src="js/frame.js"></script>
+    <link type="text/css" href="http://code.jquery.com/ui/1.10.0/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js">
+    </script>
+    <script type="text/javascript" src="http://code.jquery.com/ui/1.10.0/jquery-ui.js">
+    </script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.js">
+    </script>
+    <script type="text/javascript" src="js/frame.js">
+    </script>
     <style type="text/css">
-        body
-        {
-            font-family: Verdana,Arial,sans-serif;
-        }
-        
-        #divFrameContainer
-        {
-            border: 1px black solid;
-            padding: 2px;
-            margin-bottom: 4px;
-            overflow: auto;
-            white-space: nowrap;
-            height: 70%;
-        }
-        
-        #lstFrames
-        {
-            margin: 0;
-            padding: 0;
-            font-size: 100%;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* Make all of the frames in the list big */
-        #lstFrames label
-        {
-            margin: 2px;
-            padding: 1em;
-            font-size: 1.4em;
-            width: 50px;
-            height: 30px;
-        }
-        
-        /* Highlight selected frames */
-        #lstFrames .ui-state-active
-        {
-            background: #F39814;
-            color: white;
-        }
-        
-        /* Make the buttons big! */
-        input.gridSqr
-        {
-            width: 10px;
-            height: 10px;
-        }
-        
-        /* This highlights toggled LEDs */
-        #divGrid .ui-state-active
-        {
-            background: #F39814;
-        }
-        
-        /* Make individual grids appear inline */
-        div.gridBlk
-        {
-            display: inline-block;
-            margin: 10px;
-        }
-        
-        div.left
-        {
-            float: left;
-        }
-        
-        div.right
-        {
-            float: right;
-        }
-        
-        div.desc
-        {
-            text-align: center;
-            vertical-align: baseline;
-            font-size: 1em;
-        }
-        
-        input.grdFillBtn
-        {
-            font-size: 0.8em;
-            width: 40px;
-            height: 30px;
-        }
-        
-        .noselect
-        {
-            user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-        }
-        
-        .submenu
-        {
-            display: none;
-            font-size: 80%;
-        }
+      body {
+        font-family: Verdana, Arial, sans-serif;
+      }
+      
+      #divFrameContainer {
+        border: 1px black solid;
+        padding: 2px;
+        margin-bottom: 4px;
+        overflow: auto;
+        white-space: nowrap;
+        height: 70%;
+      }
+      
+      #lstFrames {
+        margin: 0;
+        padding: 0;
+        font-size: 100%;
+        width: 100%;
+        height: 100%;
+      }
+      
+      /* Make all of the frames in the list big */
+      #lstFrames label {
+        margin: 2px;
+        padding: 1em;
+        font-size: 1.4em;
+        width: 50px;
+        height: 30px;
+      }
+      
+      /* Highlight selected frames */
+      #lstFrames .ui-state-active {
+        background: #F39814;
+        color: white;
+      }
+      
+      /* Make the buttons big! */
+      input.gridSqr {
+        width: 10px;
+        height: 10px;
+      }
+      
+      /* This highlights toggled LEDs */
+      #divGrid .ui-state-active {
+        background: #F39814;
+      }
+      
+      /* Make individual grids appear inline */
+      div.gridBlk {
+        display: inline-block;
+        margin: 10px;
+      }
+      
+      div.left {
+        float: left;
+      }
+      
+      div.right {
+        float: right;
+      }
+      
+      div.desc {
+        text-align: center;
+        vertical-align: baseline;
+        font-size: 1em;
+      }
+      
+      input.grdFillBtn {
+        font-size: 0.8em;
+        width: 40px;
+        height: 30px;
+      }
+      
+      .noselect {
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+      }
+      
+      .submenu {
+        display: none;
+        font-size: 80%;
+      }
     </style>
     <script type="text/javascript">
-	
-		// Now that all external scripts have been loaded, it's initialization time!
-
-		// Index of currently selected frame
-		var currentFrame = 0;
-		// Are we in "playback" or "edit" mode?
-		var inEditMode = true; 
-
-        // Cached selectors.
-        var lstFrames;
-        var txtDuration;
-        var dlgPreview;
-        var checkboxSelectors = new Object();
-
-        // Stores global information.
-		var globals;
-
-		// This is a wrapper for all of our globals (such as dimensions and the frame
-		// collection) so we can easily serialize/deserialize everything at once.
-		function progData(width, height, depth)
-		{
-			this.cubeWidth = width;
-			this.cubeHeight = height;
-			this.cubeDepth = depth;
-			this.frameCollection = new Array();
-		}
-
-		// Update the list of frames in the dialog
-		function updateFrameList()
-		{
-			// Set the currentFrame to be within the bounds of the frameCollection
-			if( currentFrame >= globals.frameCollection.length )
-			{
-				currentFrame = globals.frameCollection.length - 1;
-			}
-
-			// Regenerate contents of frame list
-			var i;
-			lstFrames.empty();
-			for(i=0;i<globals.frameCollection.length;i++)
-			{
-				// We have to apply "left" otherwise Chrome won't work for some reason.
-				// See http://forum.jquery.com/topic/radio-button-grouping-not-working-cross-browser-jquery-ui regarding
-				lstFrames.append('<input type="radio" name="radFrames" id="radFrame'+i+'" value="'+i+'" onclick="javascript:selFrame('+i+')"/><label for="radFrame'+i+'">'+(i+1)+'</label>');
-			}
-			
-			// Make selectable again
-			lstFrames.buttonset();
-									
-		};
-		
-		function selFrame(i)
-		{
-			currentFrame = i;
-			loadCurFrame();
-		}
-		
-		// Sets all the light input elements to match the currently selected frame
-		function loadCurFrame()
-		{
-			// Select this radio button
-			$("input[name=radFrames]").val(currentFrame);
-			$("#radFrame"+currentFrame).prop("checked", true);
-			
-			// Refresh the UI
-			$("#lstFrames > input").button("refresh");
-			
-			// Set state of all the checkboxes 
-			var i;
-		
-			for(i=0;i<globals.frameCollection[currentFrame].cells.length;i++)
-			{
-				if(globals.frameCollection[currentFrame].cells[i]==0)
-				{
-					// Not checked, so set that
-					checkboxSelectors[i].prop("checked", false);
-				}
-				else
-				{
-					// Set as checked, and display as such
-					checkboxSelectors[i].prop("checked", true);
-				}
-
-				// State probably changed, so refresh
-				checkboxSelectors[i].button("refresh");
-			}
-			
-			// Render preview dialog
-			renderCanvas();
-			
-			// Set duration value for textbox
-			txtDuration.val(globals.frameCollection[currentFrame].duration);
-		}
-		
-		// Function for advancing the frame in playback mode.
-		// Adds an event timer to call itself after the current frame's duration is up.
-		function advancePlayback()
-		{
-			// Only advance frame playback if we're in playback mode
-			if( inEditMode === false )
-			{
-				// Advance the frame
-				nextFrame();
-				
-				// Set the event timer to advance to the next frame 
-				setTimeout("advancePlayback();", globals.frameCollection[currentFrame].duration);
-			}
-		}
-		
-		// Render the canvas element.  Note that this will only go through
-		// the rendering process if the preview dialog is open.
-		function renderCanvas()
-		{
-			// Skip over this if the preview dialog isn't visible
-			if( dlgPreview.dialog("isOpen") )
-			{
-				// jQuery doesn't natively support canvas stuff right now,
-				// so we have to use plain 'ol Javascript for manipulating that.
-				// Oh well.
-				var canvas = document.getElementById('cvsPreview'); 
-				
-				// Only proceed if we support the canvas tag in our browser
-				if( canvas.getContext )
-				{
-					var ctx = canvas.getContext('2d');
-					
-					// Initialize vars
-					var canvasHeight = 200; // TODO: change if the canvas dimensions change
-					var canvasWidth = 220; // TODO: change if the canvas dimensions change
-					var canvasX; // Current X pos
-					var canvasY; // Current Y pos
-					var onRadius = 4; // Radius for "on" LEDs
-					var offRadius = 2; // Radius for "off" LEDs
-					var i; // current horiz-pos
-					var j; // current vert-pos
-					var k; // current depth-pos
-					
-					// TODO: modify vGridSep/vSep and hGridSep/hSep based on dimensions 
-					var vGridSep=20; // Vertical separation between grids
-					var hGridSep=30; // Horizontal separation between grids
-					var vSep=10; // Vertical separation between rows in a grid
-					var hSep=15; // Horizontal separation between columns in a grid
-					
-					// Calculate initial offsets by determining the dimensions of the cube to render,
-					// subtracting them from the available space, and dividing by 2
-					// Initial offset for X
-					var startX = (canvasWidth - (hGridSep*(globals.cubeDepth-1)) - (hSep*globals.cubeWidth)) 
-										/ 2;
-										
-					// Initial offset for Y
-					var startY = (canvasHeight - (vGridSep*(globals.cubeDepth-1)) - (vSep*globals.cubeHeight))
-										/ 2;
-					
-					var curFrame = globals.frameCollection[currentFrame];
-					var fullCircleRad = 2*Math.PI;
-					
-					ctx.fillStyle = "#FFFFFF";
-					ctx.fillRect(0,0,canvasWidth,canvasHeight);
-					
-					// We need to draw back-to-front
-					for(k=globals.cubeDepth-1;k>=0;k--)
-					{
-						for(j=0;j<globals.cubeHeight;j++)
-						{
-							// The starting Y is going to increase with every iteration
-							canvasY = startY + vGridSep*(globals.cubeDepth-k-1) + vSep*j;
-							// The starting X is going to decrease with every iteration
-							canvasX = startX + hGridSep*k;
-						
-							for(i=0;i<globals.cubeWidth;i++)
-							{
-								ctx.beginPath();
-								
-								if( curFrame.cells[curFrame.getIndex(i,j,k)] == 1)
-								{
-									// Lit
-									ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
-									ctx.fillStyle = "#F39814";
-								}
-								else
-								{
-									// Not lit
-									ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
-									ctx.fillStyle = "#AAAAAA";
-								}
-							
-								ctx.closePath();
-								ctx.fill();
-							
-								canvasX = canvasX + hSep;
-								canvasY = canvasY + vSep;
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		// Do an entire refresh of the UI.
-		function refreshUi()
-		{
-			// Regenerate the checkbox elements
-			var i; // X-position
-			var j; // Y-position
-			var k; // Z-position
-			var index = 0;
-
-			// Clear contents of divGrid
-			$("#divGrid").html("");
-			
-			for(k=0;k<globals.cubeDepth;k++)
-			{
-				var gridText = '<div id="grid'+k+'" class="gridBlk">';
-				
-				for(j=0;j<globals.cubeHeight;j++)
-				{
-					// Add div for this row
-					gridText = gridText + '<div id="row'+k+'-'+j+'">';
-					for(i=0;i<globals.cubeWidth;i++)
-					{
-						// Add checkbox item for this square
-						gridText = gridText + '<input type="checkbox" class="gridSqr" id="chk'+index+'" onclick="javascript:toggleLED('+index+');"/><label for="chk'+index+'"><span class="noselect">&nbsp;</span></label>';
-						index++; // Increment the index
-					}
-
-					// Add row closing tag
-					gridText = gridText + '</div>';
-				}
-				
-				// Add grid fill
-				gridText = gridText + '<br><div><div class="left"><input type="button" class="grdFillBtn" id="btnFill'+k+'" onclick="javascript:setGrid('+k+',1);" value="F"/></div>';
-				gridText = gridText + '<div class="right"><input type="button" class="grdFillBtn" id="btnEmpty'+k+'" onclick="javascript:setGrid('+k+',0);" value="E"/></div>';
-				
-				// Add guideline depth text
-				if(k==0)
-				{
-					gridText = gridText + '<div class="desc">Front</div>';
-				}
-				else if (k == globals.cubeDepth - 1)
-				{
-					gridText = gridText + '<div class="desc">Back</div>';
-				}
-				else
-				{
-					// HACK: figure out a better way of aligning
-					gridText= gridText + '<div class="desc">&nbsp;</div>';
-				}
-					
-				// Add grid closing tag
-				gridText = gridText + "</div>\n";
-							
-				// Add div to DOM
-				$("#divGrid").append(gridText);
-                			
-			}
-
-            // Re-cache checkbox selectors
-            checkboxSelectors = new Object();
-            for(selectIdx=0;selectIdx<index;selectIdx++) {
-                checkboxSelectors[selectIdx] = $("#chk" + selectIdx);
-            }
-
-			// Make jQuery buttons
-			$(".gridSqr").button();
-			$(".grdFillBtn").button();
-			
-			// Update the frame list
-			updateFrameList();
-		
-			// Load current frame
-			loadCurFrame();
-		};
-		
-		// Generate table code for the program memory
-		function toCode(depthBeforeHeight)
-		{
-			// Close the dialog
-			$("#dlgGenerateCodeAs").dialog("close");
-		
-			var codeString = "const imageTab[] PROGMEM = {\n";
-			var i;
-		
-			for(i=0;i<globals.frameCollection.length;i++)
-			{
-				codeString = codeString + globals.frameCollection[i].toCode(depthBeforeHeight);
-			}
-			
-			// Add dummy element at end
-			codeString = codeString + " { ";
-			
-			// Add 0s for all of the elements.  Assuming that each
-			// element is going to represent a single row, we know
-			// that we'll have height*depth elements.
-			for(i=0;i<globals.cubeHeight*globals.cubeDepth;i++)
-			{
-				codeString = codeString + "0, ";
-			}
-			
-			// Add closing duration/brackets/etc
-			codeString = codeString + "0 },\n};";
-			
-			// And set for the textarea!
-			$("#genCode").val(codeString);
-			
-			// Finally, pop up the dialog
-			$("#dlgGenerateCode").dialog("open");
-		}
-		
-		// Show the "Save Data" dialog
-		function toObj()
-		{
-			// Since we stored everything as a single object, we just need to serialize this
-			// to JSON.
-			var serGlob = JSON.stringify(globals);
-			
-			// Set for the textarea
-			$("#genObj").val(serGlob);
-			
-			// Finally, pop up dialog
-			$("#dlgGenerateObj").dialog("open");
-		}
-
-		// Load in object data from the "Load Data" dialog
-		function fromObj()
-		{
-			// Make sure non-whitespace was provided before doing anything else
-			if( $.trim($("#loadObj").val()) == "" )
-			{
-				alert("No object data provided.");
-				return;
-			}
-		
-			try
-			{
-				// Load in from JSON
-				globals = JSON.parse($("#loadObj").val());
-				
-				// We need to re-add in function definitions because the're not stored in JSON
-				var i;
-				for(i=0;i<globals.frameCollection.length;i++)
-				{
-					globals.frameCollection[i].getIndex = Frame.prototype.getIndex;
-					globals.frameCollection[i].setCell = Frame.prototype.setCell;
-					globals.frameCollection[i].toCode = Frame.prototype.toCode;
-				}
-				
-				// Close the load dialog
-				$("#dlgLoadObj").dialog("close");
-				
-				// Refresh the UI
-				refreshUi();
-			}
-			catch(e)
-			{
-				// An error happened, reset the globals object
-				initGlobals(3,3,3);
-
-				alert("An error occurred when attempting to load your data.  Please ensure that it is formatted correctly.");
-			}
-			
-		}
-				
-		// Insert a frame at the current position.
-        // withCopy indicates if the currently-selected frame should be copied.
-		function insertFrame(withCopy)
-		{
-			// Disable editing in playback mode
-			if( inEditMode === false ) {
-				return;
-            }
-
-			// Insert new frame into array
-			if( currentFrame >= globals.frameCollection.length - 1)
-			{
-				// If we're at the very end, just add it on to the array
-				globals.frameCollection.push(new Frame(globals.cubeWidth,globals.cubeHeight,globals.cubeDepth));
-			}
-			else
-			{
-				// Splice new element into array
-				globals.frameCollection.splice(currentFrame + 1, 0, new Frame(globals.cubeWidth,globals.cubeHeight,globals.cubeDepth));
-			}
-			
-            // If we're copying a frame, do that here.
-            if( withCopy === true && currentFrame < globals.frameCollection.length - 1) {
-                // Make a copy of the cells array. Since this is
-                // an array of value types slice() will work.
-                globals.frameCollection[currentFrame + 1].cells = 
-                    globals.frameCollection[currentFrame].cells.slice(0);
-                globals.frameCollection[currentFrame + 1].duration =
-                    globals.frameCollection[currentFrame].duration;
-            }
-
-			// Switch to new frame
-			currentFrame++;
-			
-			// Refresh everything, since we inserted a new frame
-			refreshUi();
-		}
-		
-		// Delete the currently-selecte frame
-		function deleteFrame()
-		{
-			// Disable editing in playback mode
-			if( inEditMode === false ) {
-				return;
-            }
-            	
-			// Disable deleting the last frame
-			if( globals.frameCollection.length === 1 ) {
-				return;
-            }
-				
-			// Remove one element
-			globals.frameCollection.splice(currentFrame, 1);
-			
-			// Sanity check.
-			if( currentFrame >= globals.frameCollection.length )
-				currentFrame = globals.frameCollection.length - 1;
-				
-			// Refresh everything
-			refreshUi();
-		}
-		
-		// Move to the previous frame
-		function prevFrame()
-		{
-			// Decrement the current frame
-			currentFrame--;
-			
-			// Wrap around
-			if( currentFrame < 0 )
-				currentFrame = globals.frameCollection.length - 1;
-				
-			// Update the UI to match the newly selected frame
-			loadCurFrame();	
-		}
-		
-		// Move to the next frame
-		function nextFrame()
-		{
-			// Increment the current frame
-			currentFrame++;
-			
-			// Wrap around
-			if( currentFrame >= globals.frameCollection.length )
-				currentFrame = 0;
-				
-			// Update the UI to match the newly selected frame
-			loadCurFrame();		
-		}
-		
-		// Apply a duration change
-		function editDuration()
-		{
-			// Disable editing in playback mode
-			if( inEditMode === false ) {
-				return;
-            }
-            	
-			try
-			{
-				// Attempt to parse the duration value
-				var durationVal = parseInt(txtDuration.val());
-				// Minimum duration: time per LED const * # of LEDs
-				var minDuration = Math.ceil(TIME_PER_LED * globals.frameCollection[currentFrame].cells.length);
-				
-				// Figure out if this duration is too small, and display a message if that's the case
-				if( durationVal < minDuration)
-				{
-					alert("Your specified duration of "+durationVal+"ms is too small. The minimum requirement is "+minDuration+"ms.");
-					return;
-				}
-				
-				// Now set on the frame
-				globals.frameCollection[currentFrame].duration = durationVal;
-				// Update the UI to match
-				txtDuration.val(durationVal);
-				
-			}
-			catch(e)
-			{
-				alert("There was an error attempting to set this duration.  Make sure you have input the value correctly.");
-			}
-		}
-		
-		// Show/hide the preview dialog
-		function previewToggle()
-		{
-			if(dlgPreview.dialog("isOpen"))
-			{
-				dlgPreview.dialog("close");
-			}
-			else
-			{
-				dlgPreview.dialog("open");
-				renderCanvas();				
-			}
-		}
-		
-		// Play/pause button
-		function playToggle()
-		{
-			if( inEditMode === true )
-			{
-				// Currently editing, begin playback
-				inEditMode = false;
-				
-				// Disable editing fields and other such buttons
-				$(".btnDisableOnPlayback").button("disable");
-				txtDuration.prop("disabled", true);
-				
-				// Make the playback button say "Pause"
-				$("#btnPlay").val("Pause");
-				
-				// Set the event timer to advance to the next frame 
-				setTimeout("advancePlayback();", globals.frameCollection[currentFrame].duration);
-			
-			}
-			else
-			{
-				// Currently in playback mode, go back to edit
-				inEditMode = true;
-
-				// Re-enable all editing controls
-				$(":button").button("enable");
-				txtDuration.prop("disabled", false);
-
-				// Make the playback button say "Play"
-				$("#btnPlay").val("Play");
-			}
-		}
-		
-		// Toggle the value of an individual cell
-		function toggleLED(i)
-		{
-			// Disable editing in playback mode
-			if( inEditMode === false )
-			{
-				// Make sure the actual input element matches the underlying cell value
-				if(globals.frameCollection[currentFrame].cells[i]==0)
-				{
-					checkboxSelectors[i].prop("checked", false);
-				}
-				else
-				{
-					checkboxSelectors[i].prop("checked", true);
-				}
-				return;
-			}
-			
-			if( globals.frameCollection[currentFrame].cells[i] == 0 )
-			{
-				// Toggling from off to on
-				globals.frameCollection[currentFrame].cells[i] = 1;
-			}
-			else
-			{
-				// Toggling from on to off
-				globals.frameCollection[currentFrame].cells[i] = 0;
-			}
-			
-			// Update the canvas
-			renderCanvas();
-		}
-		
-		// Set all cells in a particular grid (i.e. one depth level) to a certain value
-		function setGrid(grid, val)
-		{
-	        // Disable editing in playback mode
-			if( inEditMode === false ) {
-				return;
-            }
-            	
-			var i;
-			
-			// We're only setting one grid (i.e. one particular depth level), so let's find
-			// the range in the array that corresponds with it
-			var gridDim = (globals.frameCollection[currentFrame].height*globals.frameCollection[currentFrame].width);
-			var minIndex = grid*gridDim;
-			var maxIndex = minIndex+gridDim;
-				
-			for(i=minIndex;i<maxIndex;i++)
-			{
-				globals.frameCollection[currentFrame].cells[i] = val;
-			}
-			
-			// Refresh the UI elements
-			loadCurFrame();		
-		}
-		
-		// Set all cells in a frame to a certain value
-		function setFrame(val)
-		{
-		    // Disable editing in playback mode
-			if( inEditMode === false ) {
-				return;
-            }
-
-			var i;
-			
-			for(i=0;i<globals.frameCollection[currentFrame].cells.length;i++)
-			{
-				globals.frameCollection[currentFrame].cells[i] = val;
-			}
-			
-			// Refresh the UI elements
-			loadCurFrame();
-		}
-		
-		// Show a given dialog (referred to by ID)
-		function showDlg(dialog)
-		{
-			$("#"+dialog).dialog("open");
-		}
-
-		// Show a given menu (referred to by ID)
-		function showMenu(menu)
-		{
-			// Only proceed if the menu isn't already being shown
-			if( $("#"+menu).is(':visible') === false )
-			{
-				$(".submenu").css("display", "none");
-				$("#"+menu).css("display", "inline");
-			}
-			else
-			{
-				// Treat as a toggle and hide
-				$("#"+menu).css("display", "none");			
-			}
-		}
-		
-		function createNew()
-		{
-			var width = parseInt($("#txtWidth").val());
-			var height = parseInt($("#txtHeight").val());
-			var depth = parseInt($("#txtDepth").val());
-
-			// Sanity check.
-			if( width < 1 || height < 1 || depth < 1)
-			{
-				alert("All dimensions must be at least 1 cell in length.");
-				return;
-			}
-			
-			// Re-init everything
-			initGlobals(width, height, depth);
-			refreshUi();
-						
-			// Close the dialog
-			$("#dlgNew").dialog("close");
-		}
-		
-		// Init data model for an animation with the given width, height, and depth
-		function initGlobals(width, height, depth)
-		{
-			globals = new progData(width,height,depth);
-			globals.frameCollection[0] = new Frame(globals.cubeWidth,globals.cubeHeight,globals.cubeDepth);
-		}
-				
-		$(function() {
-			
-			// Change the no JS warning to say "Loading..."
-			$("#divWarning").html("Loading...");
-
-            // Cache selectors
-            lstFrames = $("#lstFrames");
-			dlgPreview = $("#dlgPreview");
-            txtDuration = $("#txtDuration");
-
-			// Initialize buttons
-			$(":button").button();
+      
+      // Now that all external scripts have been loaded, it's initialization time!
+      
+      // Index of currently selected frame
+      var currentFrame = 0;
+      // Are we in "playback" or "edit" mode?
+      var inEditMode = true;
+      
+      // Cached selectors.
+      var lstFrames;
+      var txtDuration;
+      var dlgPreview;
+      var checkboxSelectors = new Object();
+      
+      // Stores global information.
+      var globals;
+      
+      // This is a wrapper for all of our globals (such as dimensions and the frame
+      // collection) so we can easily serialize/deserialize everything at once.
+      function progData(width, height, depth){
+        this.cubeWidth = width;
+        this.cubeHeight = height;
+        this.cubeDepth = depth;
+        this.frameCollection = new Array();
+      }
+      
+      // Update the list of frames in the dialog
+      function updateFrameList(){
+        // Set the currentFrame to be within the bounds of the frameCollection
+        if (currentFrame >= globals.frameCollection.length) {
+          currentFrame = globals.frameCollection.length - 1;
+        }
         
-        	// Create the generate dialog, and make modal
-			$("#dlgGenerateCode").dialog({ 
-				title: 'Generated Code', 
-				width: 470, 
-				height: 300, 
-				resizable: false,
-				position: ['center', 'middle'],
-				modal: true,
-				autoOpen: false,
-			});
-
-			// Create the generate as (i.e. the code format) dialog, and make modal
-			$("#dlgGenerateCodeAs").dialog({ 
-				title: 'Choose Code Format', 
-				width: 470, 
-				height: 300, 
-				resizable: false,
-				position: ['center', 'middle'],
-				modal: true,
-				autoOpen: false,
-			});
-			
-			// Create the load dialog, and make modal
-			$("#dlgLoadObj").dialog({ 
-				title: 'Load Data', 
-				width: 470, 
-				height: 300, 
-				resizable: false,
-				position: ['center', 'middle'],
-				modal: true,
-				autoOpen: false,
-			});
-
-			// Create the save dialog, and make modal
-			$("#dlgGenerateObj").dialog({ 
-				title: 'Save Data', 
-				width: 470, 
-				height: 300, 
-				resizable: false,
-				position: ['center', 'middle'],
-				modal: true,
-				autoOpen: false,
-			});
-			
-			// Create the new dialog, and make modal
-			$("#dlgNew").dialog({ 
-				title: 'New Animation', 
-				width: 470, 
-				height: 300, 
-				resizable: false,
-				position: ['center', 'middle'],
-				modal: true,
-				autoOpen: false,
-			});
-
-			// Create the about dialog, and make modal
-			$("#dlgAbout").dialog({ 
-				title: 'About', 
-				width: 470, 
-				height: 300, 
-				resizable: false,
-				position: ['center', 'middle'],
-				modal: true,
-				autoOpen: false,
-			});
-			
-			// Generate the preview dialog
-			dlgPreview.dialog({ 
-				title: 'Preview', 
-				width: 280, 
-				height: 280, 
-				resizable: false,
-				position: ['right', 'top'],
-				autoOpen: true,
-			});
-			
-			// Create the frame list dialog, also hiding the close button
-			$("#dlgFrameList").dialog({ 
-				title: 'Frames', 
-				width: 700, 
-				height: 170, 
-				minHeight: 170,
-				minWidth: 550,
-				maxHeight: 170,
-				position: ['center', 'bottom'],
-				closeOnEscape: false,
-				open: function(event, ui) { 
-					// Hide the close button
-					$(this).parent().children().children('.ui-dialog-titlebar-close').hide();		
-				}
-			});
-		
-			// Init data model
-			initGlobals(3,3,3);
-
-			// Close warning div
-			$("#divWarning").hide();
-		
-			// Show UI
-			$("#divHasJs").show();
-		
-			// Finally, refresh the entire UI
-			refreshUi();
-
-		});
+        // Regenerate contents of frame list
+        var i;
+        lstFrames.empty();
+        for (i = 0; i < globals.frameCollection.length; i++) {
+          // We have to apply "left" otherwise Chrome won't work for some reason.
+          // See http://forum.jquery.com/topic/radio-button-grouping-not-working-cross-browser-jquery-ui regarding
+          lstFrames.append('<input type="radio" name="radFrames" id="radFrame' + i + '" value="' + i + '" onclick="javascript:selFrame(' + i + ')"/><label for="radFrame' + i + '">' + (i + 1) + '</label>');
+        }
+        
+        // Make selectable again
+        lstFrames.buttonset();
+        
+      };
+      
+      function selFrame(i){
+        currentFrame = i;
+        loadCurFrame();
+      }
+      
+      // Sets all the light input elements to match the currently selected frame
+      function loadCurFrame(){
+        // Select this radio button
+        $("input[name=radFrames]").val(currentFrame);
+        $("#radFrame" + currentFrame).prop("checked", true);
+        
+        // Refresh the UI
+        $("#lstFrames > input").button("refresh");
+        
+        // Set state of all the checkboxes 
+        var i;
+        
+        for (i = 0; i < globals.frameCollection[currentFrame].cells.length; i++) {
+          if (globals.frameCollection[currentFrame].cells[i] == 0) {
+            // Not checked, so set that
+            checkboxSelectors[i].prop("checked", false);
+          }
+          else {
+            // Set as checked, and display as such
+            checkboxSelectors[i].prop("checked", true);
+          }
+          
+          // State probably changed, so refresh
+          checkboxSelectors[i].button("refresh");
+        }
+        
+        // Render preview dialog
+        renderCanvas();
+        
+        // Set duration value for textbox
+        txtDuration.val(globals.frameCollection[currentFrame].duration);
+      }
+      
+      // Function for advancing the frame in playback mode.
+      // Adds an event timer to call itself after the current frame's duration is up.
+      function advancePlayback(){
+        // Only advance frame playback if we're in playback mode
+        if (inEditMode === false) {
+          // Advance the frame
+          nextFrame();
+          
+          // Set the event timer to advance to the next frame 
+          setTimeout("advancePlayback();", globals.frameCollection[currentFrame].duration);
+        }
+      }
+      
+      // Render the canvas element.  Note that this will only go through
+      // the rendering process if the preview dialog is open.
+      function renderCanvas(){
+        // Skip over this if the preview dialog isn't visible
+        if (dlgPreview.dialog("isOpen")) {
+          // jQuery doesn't natively support canvas stuff right now,
+          // so we have to use plain 'ol Javascript for manipulating that.
+          // Oh well.
+          var canvas = document.getElementById('cvsPreview');
+          
+          // Only proceed if we support the canvas tag in our browser
+          if (canvas.getContext) {
+            var ctx = canvas.getContext('2d');
+            
+            // Initialize vars
+            var canvasHeight = 200; // TODO: change if the canvas dimensions change
+            var canvasWidth = 220; // TODO: change if the canvas dimensions change
+            var canvasX; // Current X pos
+            var canvasY; // Current Y pos
+            var onRadius = 4; // Radius for "on" LEDs
+            var offRadius = 2; // Radius for "off" LEDs
+            var i; // current horiz-pos
+            var j; // current vert-pos
+            var k; // current depth-pos
+            // TODO: modify vGridSep/vSep and hGridSep/hSep based on dimensions 
+            var vGridSep = 20; // Vertical separation between grids
+            var hGridSep = 30; // Horizontal separation between grids
+            var vSep = 10; // Vertical separation between rows in a grid
+            var hSep = 15; // Horizontal separation between columns in a grid
+            // Calculate initial offsets by determining the dimensions of the cube to render,
+            // subtracting them from the available space, and dividing by 2
+            // Initial offset for X
+            var startX = (canvasWidth - (hGridSep * (globals.cubeDepth - 1)) - (hSep * globals.cubeWidth)) /
+            2;
+            
+            // Initial offset for Y
+            var startY = (canvasHeight - (vGridSep * (globals.cubeDepth - 1)) - (vSep * globals.cubeHeight)) /
+            2;
+            
+            var curFrame = globals.frameCollection[currentFrame];
+            var fullCircleRad = 2 * Math.PI;
+            
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            
+            // We need to draw back-to-front
+            for (k = globals.cubeDepth - 1; k >= 0; k--) {
+              for (j = 0; j < globals.cubeHeight; j++) {
+                // The starting Y is going to increase with every iteration
+                canvasY = startY + vGridSep * (globals.cubeDepth - k - 1) + vSep * j;
+                // The starting X is going to decrease with every iteration
+                canvasX = startX + hGridSep * k;
+                
+                for (i = 0; i < globals.cubeWidth; i++) {
+                  ctx.beginPath();
+                  
+                  if (curFrame.cells[curFrame.getIndex(i, j, k)] == 1) {
+                    // Lit
+                    ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
+                    ctx.fillStyle = "#F39814";
+                  }
+                  else {
+                    // Not lit
+                    ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
+                    ctx.fillStyle = "#AAAAAA";
+                  }
+                  
+                  ctx.closePath();
+                  ctx.fill();
+                  
+                  canvasX = canvasX + hSep;
+                  canvasY = canvasY + vSep;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Do an entire refresh of the UI.
+      function refreshUi(){
+        // Regenerate the checkbox elements
+        var i; // X-position
+        var j; // Y-position
+        var k; // Z-position
+        var index = 0;
+        
+        // Clear contents of divGrid
+        $("#divGrid").html("");
+        
+        for (k = 0; k < globals.cubeDepth; k++) {
+          var gridText = '<div id="grid' + k + '" class="gridBlk">';
+          
+          for (j = 0; j < globals.cubeHeight; j++) {
+            // Add div for this row
+            gridText = gridText + '<div id="row' + k + '-' + j + '">';
+            for (i = 0; i < globals.cubeWidth; i++) {
+              // Add checkbox item for this square
+              gridText = gridText + '<input type="checkbox" class="gridSqr" id="chk' + index + '" onclick="javascript:toggleLED(' + index + ');"/><label for="chk' + index + '"><span class="noselect">&nbsp;</span></label>';
+              index++; // Increment the index
+            }
+            
+            // Add row closing tag
+            gridText = gridText + '</div>';
+          }
+          
+          // Add grid fill
+          gridText = gridText + '<br><div><div class="left"><input type="button" class="grdFillBtn" id="btnFill' + k + '" onclick="javascript:setGrid(' + k + ',1);" value="F"/></div>';
+          gridText = gridText + '<div class="right"><input type="button" class="grdFillBtn" id="btnEmpty' + k + '" onclick="javascript:setGrid(' + k + ',0);" value="E"/></div>';
+          
+          // Add guideline depth text
+          if (k == 0) {
+            gridText = gridText + '<div class="desc">Front</div>';
+          }
+          else 
+            if (k == globals.cubeDepth - 1) {
+              gridText = gridText + '<div class="desc">Back</div>';
+            }
+            else {
+              // HACK: figure out a better way of aligning
+              gridText = gridText + '<div class="desc">&nbsp;</div>';
+            }
+          
+          // Add grid closing tag
+          gridText = gridText + "</div>\n";
+          
+          // Add div to DOM
+          $("#divGrid").append(gridText);
+          
+        }
+        
+        // Re-cache checkbox selectors
+        checkboxSelectors = new Object();
+        for (selectIdx = 0; selectIdx < index; selectIdx++) {
+          checkboxSelectors[selectIdx] = $("#chk" + selectIdx);
+        }
+        
+        // Make jQuery buttons
+        $(".gridSqr").button();
+        $(".grdFillBtn").button();
+        
+        // Update the frame list
+        updateFrameList();
+        
+        // Load current frame
+        loadCurFrame();
+      };
+      
+      // Generate table code for the program memory
+      function toCode(depthBeforeHeight){
+        // Close the dialog
+        $("#dlgGenerateCodeAs").dialog("close");
+        
+        var codeString = "const imageTab[] PROGMEM = {\n";
+        var i;
+        
+        for (i = 0; i < globals.frameCollection.length; i++) {
+          codeString = codeString + globals.frameCollection[i].toCode(depthBeforeHeight);
+        }
+        
+        // Add dummy element at end
+        codeString = codeString + " { ";
+        
+        // Add 0s for all of the elements.  Assuming that each
+        // element is going to represent a single row, we know
+        // that we'll have height*depth elements.
+        for (i = 0; i < globals.cubeHeight * globals.cubeDepth; i++) {
+          codeString = codeString + "0, ";
+        }
+        
+        // Add closing duration/brackets/etc
+        codeString = codeString + "0 },\n};";
+        
+        // And set for the textarea!
+        $("#genCode").val(codeString);
+        
+        // Finally, pop up the dialog
+        $("#dlgGenerateCode").dialog("open");
+      }
+      
+      // Show the "Save Data" dialog
+      function toObj(){
+        // Since we stored everything as a single object, we just need to serialize this
+        // to JSON.
+        var serGlob = JSON.stringify(globals);
+        
+        // Set for the textarea
+        $("#genObj").val(serGlob);
+        
+        // Finally, pop up dialog
+        $("#dlgGenerateObj").dialog("open");
+      }
+      
+      // Load in object data from the "Load Data" dialog
+      function fromObj(){
+        // Make sure non-whitespace was provided before doing anything else
+        if ($.trim($("#loadObj").val()) == "") {
+          alert("No object data provided.");
+          return;
+        }
+        
+        try {
+          // Load in from JSON
+          globals = JSON.parse($("#loadObj").val());
+          
+          // We need to re-add in function definitions because the're not stored in JSON
+          var i;
+          for (i = 0; i < globals.frameCollection.length; i++) {
+            globals.frameCollection[i].getIndex = Frame.prototype.getIndex;
+            globals.frameCollection[i].setCell = Frame.prototype.setCell;
+            globals.frameCollection[i].toCode = Frame.prototype.toCode;
+          }
+          
+          // Close the load dialog
+          $("#dlgLoadObj").dialog("close");
+          
+          // Refresh the UI
+          refreshUi();
+        } 
+        catch (e) {
+          // An error happened, reset the globals object
+          initGlobals(3, 3, 3);
+          
+          alert("An error occurred when attempting to load your data.  Please ensure that it is formatted correctly.");
+        }
+        
+      }
+      
+      // Insert a frame at the current position.
+      // withCopy indicates if the currently-selected frame should be copied.
+      function insertFrame(withCopy){
+        // Disable editing in playback mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        // Insert new frame into array
+        if (currentFrame >= globals.frameCollection.length - 1) {
+          // If we're at the very end, just add it on to the array
+          globals.frameCollection.push(new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth));
+        }
+        else {
+          // Splice new element into array
+          globals.frameCollection.splice(currentFrame + 1, 0, new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth));
+        }
+        
+        // If we're copying a frame, do that here.
+        if (withCopy === true && currentFrame < globals.frameCollection.length - 1) {
+          // Make a copy of the cells array. Since this is
+          // an array of value types slice() will work.
+          globals.frameCollection[currentFrame + 1].cells = globals.frameCollection[currentFrame].cells.slice(0);
+          globals.frameCollection[currentFrame + 1].duration = globals.frameCollection[currentFrame].duration;
+        }
+        
+        // Switch to new frame
+        currentFrame++;
+        
+        // Refresh everything, since we inserted a new frame
+        refreshUi();
+      }
+      
+      // Delete the currently-selecte frame
+      function deleteFrame(){
+        // Disable editing in playback mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        // Disable deleting the last frame
+        if (globals.frameCollection.length === 1) {
+          return;
+        }
+        
+        // Remove one element
+        globals.frameCollection.splice(currentFrame, 1);
+        
+        // Sanity check.
+        if (currentFrame >= globals.frameCollection.length) 
+          currentFrame = globals.frameCollection.length - 1;
+        
+        // Refresh everything
+        refreshUi();
+      }
+      
+      // Move to the previous frame
+      function prevFrame(){
+        // Decrement the current frame
+        currentFrame--;
+        
+        // Wrap around
+        if (currentFrame < 0) 
+          currentFrame = globals.frameCollection.length - 1;
+        
+        // Update the UI to match the newly selected frame
+        loadCurFrame();
+      }
+      
+      // Move to the next frame
+      function nextFrame(){
+        // Increment the current frame
+        currentFrame++;
+        
+        // Wrap around
+        if (currentFrame >= globals.frameCollection.length) 
+          currentFrame = 0;
+        
+        // Update the UI to match the newly selected frame
+        loadCurFrame();
+      }
+      
+      // Apply a duration change
+      function editDuration(){
+        // Disable editing in playback mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        try {
+          // Attempt to parse the duration value
+          var durationVal = parseInt(txtDuration.val());
+          // Minimum duration: time per LED const * # of LEDs
+          var minDuration = Math.ceil(TIME_PER_LED * globals.frameCollection[currentFrame].cells.length);
+          
+          // Figure out if this duration is too small, and display a message if that's the case
+          if (durationVal < minDuration) {
+            alert("Your specified duration of " + durationVal + "ms is too small. The minimum requirement is " + minDuration + "ms.");
+            return;
+          }
+          
+          // Now set on the frame
+          globals.frameCollection[currentFrame].duration = durationVal;
+          // Update the UI to match
+          txtDuration.val(durationVal);
+          
+        } 
+        catch (e) {
+          alert("There was an error attempting to set this duration.  Make sure you have input the value correctly.");
+        }
+      }
+      
+      // Show/hide the preview dialog
+      function previewToggle(){
+        if (dlgPreview.dialog("isOpen")) {
+          dlgPreview.dialog("close");
+        }
+        else {
+          dlgPreview.dialog("open");
+          renderCanvas();
+        }
+      }
+      
+      // Play/pause button
+      function playToggle(){
+        if (inEditMode === true) {
+          // Currently editing, begin playback
+          inEditMode = false;
+          
+          // Disable editing fields and other such buttons
+          $(".btnDisableOnPlayback").button("disable");
+          txtDuration.prop("disabled", true);
+          
+          // Make the playback button say "Pause"
+          $("#btnPlay").val("Pause");
+          
+          // Set the event timer to advance to the next frame 
+          setTimeout("advancePlayback();", globals.frameCollection[currentFrame].duration);
+          
+        }
+        else {
+          // Currently in playback mode, go back to edit
+          inEditMode = true;
+          
+          // Re-enable all editing controls
+          $(":button").button("enable");
+          txtDuration.prop("disabled", false);
+          
+          // Make the playback button say "Play"
+          $("#btnPlay").val("Play");
+        }
+      }
+      
+      // Toggle the value of an individual cell
+      function toggleLED(i){
+        // Disable editing in playback mode
+        if (inEditMode === false) {
+          // Make sure the actual input element matches the underlying cell value
+          if (globals.frameCollection[currentFrame].cells[i] == 0) {
+            checkboxSelectors[i].prop("checked", false);
+          }
+          else {
+            checkboxSelectors[i].prop("checked", true);
+          }
+          return;
+        }
+        
+        if (globals.frameCollection[currentFrame].cells[i] == 0) {
+          // Toggling from off to on
+          globals.frameCollection[currentFrame].cells[i] = 1;
+        }
+        else {
+          // Toggling from on to off
+          globals.frameCollection[currentFrame].cells[i] = 0;
+        }
+        
+        // Update the canvas
+        renderCanvas();
+      }
+      
+      // Set all cells in a particular grid (i.e. one depth level) to a certain value
+      function setGrid(grid, val){
+        // Disable editing in playback mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        var i;
+        
+        // We're only setting one grid (i.e. one particular depth level), so let's find
+        // the range in the array that corresponds with it
+        var gridDim = (globals.frameCollection[currentFrame].height * globals.frameCollection[currentFrame].width);
+        var minIndex = grid * gridDim;
+        var maxIndex = minIndex + gridDim;
+        
+        for (i = minIndex; i < maxIndex; i++) {
+          globals.frameCollection[currentFrame].cells[i] = val;
+        }
+        
+        // Refresh the UI elements
+        loadCurFrame();
+      }
+      
+      // Set all cells in a frame to a certain value
+      function setFrame(val){
+        // Disable editing in playback mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        var i;
+        
+        for (i = 0; i < globals.frameCollection[currentFrame].cells.length; i++) {
+          globals.frameCollection[currentFrame].cells[i] = val;
+        }
+        
+        // Refresh the UI elements
+        loadCurFrame();
+      }
+      
+      // Show a given dialog (referred to by ID)
+      function showDlg(dialog){
+        $("#" + dialog).dialog("open");
+      }
+      
+      // Show a given menu (referred to by ID)
+      function showMenu(menu){
+        // Only proceed if the menu isn't already being shown
+        if ($("#" + menu).is(':visible') === false) {
+          $(".submenu").css("display", "none");
+          $("#" + menu).css("display", "inline");
+        }
+        else {
+          // Treat as a toggle and hide
+          $("#" + menu).css("display", "none");
+        }
+      }
+      
+      function createNew(){
+        var width = parseInt($("#txtWidth").val());
+        var height = parseInt($("#txtHeight").val());
+        var depth = parseInt($("#txtDepth").val());
+        
+        // Sanity check.
+        if (width < 1 || height < 1 || depth < 1) {
+          alert("All dimensions must be at least 1 cell in length.");
+          return;
+        }
+        
+        // Re-init everything
+        initGlobals(width, height, depth);
+        refreshUi();
+        
+        // Close the dialog
+        $("#dlgNew").dialog("close");
+      }
+      
+      // Init data model for an animation with the given width, height, and depth
+      function initGlobals(width, height, depth){
+        globals = new progData(width, height, depth);
+        globals.frameCollection[0] = new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth);
+      }
+      
+      $(function(){
+      
+        // Change the no JS warning to say "Loading..."
+        $("#divWarning").html("Loading...");
+        
+        // Cache selectors
+        lstFrames = $("#lstFrames");
+        dlgPreview = $("#dlgPreview");
+        txtDuration = $("#txtDuration");
+        
+        // Initialize buttons
+        $(":button").button();
+        
+        // Create the generate dialog, and make modal
+        $("#dlgGenerateCode").dialog({
+          title: 'Generated Code',
+          width: 470,
+          height: 300,
+          resizable: false,
+          position: ['center', 'middle'],
+          modal: true,
+          autoOpen: false,
+        });
+        
+        // Create the generate as (i.e. the code format) dialog, and make modal
+        $("#dlgGenerateCodeAs").dialog({
+          title: 'Choose Code Format',
+          width: 470,
+          height: 300,
+          resizable: false,
+          position: ['center', 'middle'],
+          modal: true,
+          autoOpen: false,
+        });
+        
+        // Create the load dialog, and make modal
+        $("#dlgLoadObj").dialog({
+          title: 'Load Data',
+          width: 470,
+          height: 300,
+          resizable: false,
+          position: ['center', 'middle'],
+          modal: true,
+          autoOpen: false,
+        });
+        
+        // Create the save dialog, and make modal
+        $("#dlgGenerateObj").dialog({
+          title: 'Save Data',
+          width: 470,
+          height: 300,
+          resizable: false,
+          position: ['center', 'middle'],
+          modal: true,
+          autoOpen: false,
+        });
+        
+        // Create the new dialog, and make modal
+        $("#dlgNew").dialog({
+          title: 'New Animation',
+          width: 470,
+          height: 300,
+          resizable: false,
+          position: ['center', 'middle'],
+          modal: true,
+          autoOpen: false,
+        });
+        
+        // Create the about dialog, and make modal
+        $("#dlgAbout").dialog({
+          title: 'About',
+          width: 470,
+          height: 300,
+          resizable: false,
+          position: ['center', 'middle'],
+          modal: true,
+          autoOpen: false,
+        });
+        
+        // Generate the preview dialog
+        dlgPreview.dialog({
+          title: 'Preview',
+          width: 280,
+          height: 280,
+          resizable: false,
+          position: ['right', 'top'],
+          autoOpen: true,
+        });
+        
+        // Create the frame list dialog, also hiding the close button
+        $("#dlgFrameList").dialog({
+          title: 'Frames',
+          width: 700,
+          height: 170,
+          minHeight: 170,
+          minWidth: 550,
+          maxHeight: 170,
+          position: ['center', 'bottom'],
+          closeOnEscape: false,
+          open: function(event, ui){
+            // Hide the close button
+            $(this).parent().children().children('.ui-dialog-titlebar-close').hide();
+          }
+        });
+        
+        // Init data model
+        initGlobals(3, 3, 3);
+        
+        // Close warning div
+        $("#divWarning").hide();
+        
+        // Show UI
+        $("#divHasJs").show();
+        
+        // Finally, refresh the entire UI
+        refreshUi();
+        
+      });
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div id="divWarning" style="z-index: 1000; width: 100%; height: 100%; background: white;">
-        <h1>
-            You appear to have Javascript disabled. To use this tool, Javascript and CSS must
-            be enabled.</h1>
+      <h1>You appear to have Javascript disabled. To use this tool, Javascript and CSS must
+        be enabled.</h1>
     </div>
     <div id="divHasJs" style="display: none;">
-        <div id="divMenu" style="display: inline-block;">
-            <input id="btnFileMnu" type="button" value="File" onclick="javascript:showMenu('mnuFile');" />
-            <input id="btnFrameMnu" type="button" value="Frame" onclick="javascript:showMenu('mnuFrame');" />
-            <input id="btnViewMnu" type="button" value="View" onclick="javascript:showMenu('mnuView');" />
-            <span id="mnuFile" class="submenu">
-                <input id="btnShowNew" type="button" value="New..." class="btnDisableOnPlayback"
-                    onclick="javascript:showDlg('dlgNew');" />
-                <input id="btnGenerateCode" type="button" value="To Code..." class="btnDisableOnPlayback"
-                    onclick="javascript:showDlg('dlgGenerateCodeAs');" />
-                <input id="btnLoadObj" type="button" value="Load..." class="btnDisableOnPlayback"
-                    onclick="javascript:showDlg('dlgLoadObj');" />
-                <input id="btnSaveObj" type="button" value="Save..." class="btnDisableOnPlayback"
-                    onclick="javascript:toObj();" />
-            </span><span id="mnuFrame" class="submenu">
-                <input id="btnClearAll" type="button" value="Clear Frame" class="btnDisableOnPlayback"
-                    onclick="javascript:setFrame(0);" />
-                <input id="btnFillAll" type="button" value="Fill Frame" class="btnDisableOnPlayback"
-                    onclick="javascript:setFrame(1);" />
-            </span><span id="mnuView" class="submenu">
-                <input id="btnToggPreview" type="button" value="Toggle Preview" onclick="javascript:previewToggle();" />
-                <input id="btnAbout" type="button" value="About..." class="btnDisableOnPlayback"
-                    onclick="javascript:showDlg('dlgAbout');" />
-            </span>
+      <div id="divMenu" style="display: inline-block;">
+        <input id="btnFileMnu" type="button" value="File" onclick="javascript:showMenu('mnuFile');"/><input id="btnFrameMnu" type="button" value="Frame" onclick="javascript:showMenu('mnuFrame');"/><input id="btnViewMnu" type="button" value="View" onclick="javascript:showMenu('mnuView');"/><span id="mnuFile" class="submenu"><input id="btnShowNew" type="button" value="New..." class="btnDisableOnPlayback" onclick="javascript:showDlg('dlgNew');"/><input id="btnGenerateCode" type="button" value="To Code..." class="btnDisableOnPlayback" onclick="javascript:showDlg('dlgGenerateCodeAs');"/><input id="btnLoadObj" type="button" value="Load..." class="btnDisableOnPlayback" onclick="javascript:showDlg('dlgLoadObj');"/><input id="btnSaveObj" type="button" value="Save..." class="btnDisableOnPlayback" onclick="javascript:toObj();"/></span><span id="mnuFrame" class="submenu"><input id="btnClearAll" type="button" value="Clear Frame" class="btnDisableOnPlayback" onclick="javascript:setFrame(0);"/><input id="btnFillAll" type="button" value="Fill Frame" class="btnDisableOnPlayback" onclick="javascript:setFrame(1);"/></span><span id="mnuView" class="submenu"><input id="btnToggPreview" type="button" value="Toggle Preview" onclick="javascript:previewToggle();"/><input id="btnAbout" type="button" value="About..." class="btnDisableOnPlayback" onclick="javascript:showDlg('dlgAbout');"/></span>
+      </div><hr/>
+      <div id="divMain">
+        <div id="divGrid">
+          <!-- should get filled in later by refreshUI() and updated by loadCurFrame() -->
         </div>
-        <hr />
-        <div id="divMain">
-            <div id="divGrid">
-                <!-- should get filled in later by refreshUI() and updated by loadCurFrame() -->
-            </div>
+      </div>
+      <div id="dlgFrameList" style="font-size: 50%;">
+        <div id="divFrameContainer">
+          <ol id="lstFrames">
+            <!-- should get filled in later by updateFrameList() -->
+          </ol>
         </div>
-        <div id="dlgFrameList" style="font-size: 50%;">
-            <div id="divFrameContainer">
-                <ol id="lstFrames">
-                    <!-- should get filled in later by updateFrameList() -->
-                </ol>
-            </div>
-            <div style="float: left;">
-                <input id="btnPrevFrame" type="button" value="<<" class="btnDisableOnPlayback" onclick="javascript:prevFrame();" />
-                <input id="btnPlay" type="button" value="Play" onclick="javascript:playToggle();" />
-                <input id="btnNextFrame" type="button" value=">>" class="btnDisableOnPlayback" onclick="javascript:nextFrame();" />
-            </div>
-            <div style="float: right;">
-                <input id="btnInsertFrame" type="button" value="Insert" class="btnDisableOnPlayback"
-                    onclick="javascript:insertFrame(false);" />
-                <input id="btnCopyFrame" type="button" value="Copy" class="btnDisableOnPlayback"
-                    onclick="javascript:insertFrame(true);" />
-                <input id="btnDeleteFrame" type="button" value="Delete" class="btnDisableOnPlayback"
-                    onclick="javascript:deleteFrame();" />
-            </div>
-            <div style="text-align: center;">
-                Current frame duration (in ms):<input id="txtDuration" type="text" style="width: 50px;" />
-                <input id="btnApplyDuration" type="button" value="Apply" class="btnDisableOnPlayback"
-                    onclick="javascript:editDuration();" />
-            </div>
+        <div style="float: left;">
+          <input id="btnPrevFrame" type="button" value="<<" class="btnDisableOnPlayback" onclick="javascript:prevFrame();"/><input id="btnPlay" type="button" value="Play" onclick="javascript:playToggle();"/><input id="btnNextFrame" type="button" value=">>" class="btnDisableOnPlayback" onclick="javascript:nextFrame();"/>
         </div>
-        <div id="dlgNew">
-            <label for="txtWidth">
-                Width:</label><input id="txtWidth" type="text" value="3" /><br />
-            <label for="txtHeight">
-                Height:</label><input id="txtHeight" type="text" value="3" /><br />
-            <label for="txtDepth">
-                Depth:</label><input id="txtDepth" type="text" value="3" /><br />
-            <hr />
-            <input id="btnNew" type="button" value="Create" class="btnDisableOnPlayback" onclick="javascript:createNew();" />
+        <div style="float: right;">
+          <input id="btnInsertFrame" type="button" value="Insert" class="btnDisableOnPlayback" onclick="javascript:insertFrame(false);"/><input id="btnCopyFrame" type="button" value="Copy" class="btnDisableOnPlayback" onclick="javascript:insertFrame(true);"/><input id="btnDeleteFrame" type="button" value="Delete" class="btnDisableOnPlayback" onclick="javascript:deleteFrame();"/>
         </div>
-        <div id="dlgGenerateCode" style="font-size: 50%;">
-            <h4>
-                This code can be used within the firmware for your LED cube.</h4>
-            <textarea id="genCode" cols="80" rows="15"></textarea>
+        <div style="text-align: center;">
+          Current frame duration (in ms):<input id="txtDuration" type="text" style="width: 50px;"/><input id="btnApplyDuration" type="button" value="Apply" class="btnDisableOnPlayback" onclick="javascript:editDuration();"/>
         </div>
-        <div id="dlgGenerateCodeAs" style="font-size: 75%;">
-            <p>
-                Depending on the kind of firmware you are using, your data could be stored in one
-                of two formats. Height-depth-width order typically has struct elements with names
-                like &quot;TopFrontRow&quot;, whereas depth-height-width order has struct elements
-                with names like &quot;topRow0&quot;. Please specify which format to use:</p>
-            <hr />
-            <input id="btnSaveHeightFirst" type="button" value="Height-depth-width order" class="btnDisableOnPlayback"
-                onclick="javascript:toCode(false);" />
-            <br>
-            <input id="btnSaveDepthFirst" type="button" value="Depth-height-width order" class="btnDisableOnPlayback"
-                onclick="javascript:toCode(true);" />
-        </div>
-        <div id="dlgGenerateObj" style="font-size: 50%;">
-            <h4>
-                Save the box's contents as a text file. You can load it to continue your work later.</h4>
-            <textarea id="genObj" cols="80" rows="15"></textarea>
-        </div>
-        <div id="dlgLoadObj" style="font-size: 50%;">
-            <h4>
-                Please provide saved serialized object.</h4>
-            <textarea id="loadObj" cols="80" rows="13"></textarea>
-            <input id="btnLoad" type="button" value="Load" class="btnDisableOnPlayback" onclick="javascript:fromObj();" />
-        </div>
-        <div id="dlgAbout" style="font-size: 75%;">
-            <h3>
-                LED Cube Pattern Generation Tool</h3>
-            <h4>
-                Version 0.5</h4>
-            <h4>
-                Author: Andrew Stock &lt;<a href="mailto:totally@funoninter.net">totally@funoninter.net</a>&gt;</h4>
-            Feedback and enhancement suggestions are greatly appreciated.
-            <hr />
-            <p>
-                This work (index.html and frame.js) is licensed under the Creative Commons Attribution-ShareAlike
-                3.0 Unported License. To view a copy of this license, visit <a href="http://creativecommons.org/licenses/by-sa/3.0/"
-                    target="_blank">http://creativecommons.org/licenses/by-sa/3.0/</a> or send a
-                letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California,
-                94105, USA.</p>
-        </div>
-        <div id="dlgPreview" style="text-align: center;">
-            <canvas id="cvsPreview" width="220" height="200">
-		Sorry, your browser does not currently support the &lt;canvas&gt; element.  Therefore, you will be unable to use the preview functionality.
-		</canvas>
-        </div>
+      </div>
+      <div id="dlgNew">
+        <label for="txtWidth">
+          Width:
+        </label>
+        <input id="txtWidth" type="text" value="3" />
+        <br/>
+        <label for="txtHeight">
+          Height:
+        </label>
+        <input id="txtHeight" type="text" value="3" />
+        <br/>
+        <label for="txtDepth">
+          Depth:
+        </label>
+        <input id="txtDepth" type="text" value="3" />
+        <br/>
+        <hr/><input id="btnNew" type="button" value="Create" class="btnDisableOnPlayback" onclick="javascript:createNew();"/>
+      </div>
+      <div id="dlgGenerateCode" style="font-size: 50%;">
+        <h4>This code can be used within the firmware for your LED cube.</h4>
+        <textarea id="genCode" cols="80" rows="15">
+        </textarea>
+      </div>
+      <div id="dlgGenerateCodeAs" style="font-size: 75%;">
+        <p>
+          Depending on the kind of firmware you are using, your data could be stored in one
+          of two formats. Height-depth-width order typically has struct elements with names
+          like &quot;TopFrontRow&quot;, whereas depth-height-width order has struct elements
+          with names like &quot;topRow0&quot;. Please specify which format to use:
+        </p>
+        <hr/><input id="btnSaveHeightFirst" type="button" value="Height-depth-width order" class="btnDisableOnPlayback" onclick="javascript:toCode(false);"/>
+        <br>
+        <input id="btnSaveDepthFirst" type="button" value="Depth-height-width order" class="btnDisableOnPlayback" onclick="javascript:toCode(true);"/>
+      </div>
+      <div id="dlgGenerateObj" style="font-size: 50%;">
+        <h4>Save the box's contents as a text file. You can load it to continue your work later.</h4>
+        <textarea id="genObj" cols="80" rows="15">
+        </textarea>
+      </div>
+      <div id="dlgLoadObj" style="font-size: 50%;">
+        <h4>Please provide saved serialized object.</h4>
+        <textarea id="loadObj" cols="80" rows="13">
+        </textarea>
+        <input id="btnLoad" type="button" value="Load" class="btnDisableOnPlayback" onclick="javascript:fromObj();"/>
+      </div>
+      <div id="dlgAbout" style="font-size: 75%;">
+        <h3>LED Cube Pattern Generation Tool</h3>
+        <h4>Version 0.5</h4>
+        <h4>Author: Andrew Stock &lt;<a href="mailto:totally@funoninter.net">totally@funoninter.net</a>&gt;</h4>
+        Feedback and enhancement suggestions are greatly appreciated.<hr/>
+        <p>
+          This work (index.html and frame.js) is licensed under the Creative Commons Attribution-ShareAlike 
+          3.0 Unported License. To view a copy of this license, visit <a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">http://creativecommons.org/licenses/by-sa/3.0/</a>
+          or send a letter
+          to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105,
+          USA.
+        </p>
+      </div>
+      <div id="dlgPreview" style="text-align: center;">
+        <canvas id="cvsPreview" width="220" height="200">
+          Sorry, your browser does not currently support the &lt;canvas&gt; element.  Therefore, you will be unable to use the preview functionality.
+        </canvas>
+      </div>
     </div>
-</body>
+  </body>
 </html>
