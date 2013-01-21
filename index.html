@@ -254,8 +254,12 @@
                 // The starting X is going to decrease with every iteration
                 canvasX = startX + hGridSep * k;
                 
+				// Start the path. We originally were
+				// creating a path for each cell
+				// but this is more efficient.
+				ctx.beginPath();
+				
                 for (i = 0; i < globals.cubeWidth; i += 1) {
-                  ctx.beginPath();
                   
                   if (curFrame.cells[curFrame.getIndex(i, j, k)] === 1) {
                     // Lit
@@ -268,12 +272,12 @@
                     ctx.fillStyle = "#AAAAAA";
                   }
                   
-                  ctx.closePath();
-                  ctx.fill();
-                  
                   canvasX = canvasX + hSep;
                   canvasY = canvasY + vSep;
                 }
+				
+				ctx.closePath();
+                ctx.fill();
               }
             }
           }
