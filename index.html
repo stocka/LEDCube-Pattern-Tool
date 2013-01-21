@@ -33,8 +33,15 @@
       // Stores global information.
       var globals;
       
-      // This is a wrapper for all of our globals (such as dimensions and the frame
-      // collection) so we can easily serialize/deserialize everything at once.
+      /**
+       * Creates an instance of ProgData, which stores
+       * all information about an animation.
+       * @constructor
+       * @this {ProgData}
+       * @param {Number} width The cube width.
+       * @param {Number} height The cube height.
+       * @param {Number} depth The cube depth.
+       */
       function ProgData(width, height, depth){
         this.cubeWidth = width;
         this.cubeHeight = height;
@@ -42,13 +49,22 @@
         this.frameCollection = [];
       }
       
-      // Init data model for an animation with the given width, height, and depth
+      /**
+       * Initializes global state for a new animation.
+       * @param {Number} width The cube width.
+       * @param {Number} height The cube height.
+       * @param {Number} depth The cube depth.
+       */
       function initGlobals(width, height, depth){
         globals = new ProgData(width, height, depth);
         globals.frameCollection[0] = new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth);
       }
       
-      // Render the canvas element.
+      /**
+       * Renders the canvas element.
+       * @param {Number} frameId The ID of the frame, or -1 for precaching the unlit LED canvas.
+       * @param {Boolean} isPreview True if this is a preview (meaning that we don't clear the canvas out and use a different fill style)
+       */
       function renderCanvas(frameId, isPreview){
       
         // FUTURE: Change if canvas dimensions change
@@ -200,7 +216,9 @@
         }
       }
       
-      // Update the list of frames in the dialog
+      /**
+       * Updates the list of frames in the dialog.
+       */
       function updateFrameList(){
         // Set the currentFrame to be within the bounds of the frameCollection
         if (currentFrame >= globals.frameCollection.length) {
@@ -234,10 +252,12 @@
         
         // Make selectable again
         lstFrames.buttonset();
-        
       }
       
-      // Sets all the light input elements to match the currently selected frame
+      /**
+       * Initializes all the input elements (including lights)
+       * to match whatever frame has currently-been selected.
+       */
       function loadCurFrame(){
       
         // Select this radio button
@@ -271,6 +291,10 @@
         txtDuration.val(globals.frameCollection[currentFrame].duration);
       }
       
+      /**
+       * Previews a frame on mouseover.
+       * @param {jQuery.Event} event The event object. The frame ID should be the first element in the data collection.
+       */
       function previewFrame(event){
         // Don't show mouseover preview in edit mode
         if (inEditMode === false) {
@@ -286,6 +310,10 @@
         }
       }
       
+      /**
+       * Clears a preview of a frame on mouseout.
+       * @param {jQuery.Event} event The event object. The frame ID should be the first element in the data collection.
+       */
       function stopPreviewFrame(event){
         // Don't clear mouseover preview in edit mode
         if (inEditMode === false) {
@@ -301,13 +329,20 @@
         }
       }
       
+      /**
+       * Selects a frame.
+       * @param {jQuery.Event} event The event object. The frame ID should be the first element in the data collection.
+       */
       function selFrame(event){
         currentFrame = event.data[0];
         loadCurFrame();
       }
       
-      // Function for advancing the frame in playback mode.
-      // Adds an event timer to call itself after the current frame's duration is up.
+      /**
+       * Advances the current frame in playback mode. Adds
+       * an event timer to call itself after the current
+       * frame's duration is up.
+       */
       function advancePlayback(){
         // Only advance frame playback if we're in playback mode
         if (inEditMode === false) {
@@ -319,7 +354,11 @@
         }
       }
       
-      // Do an entire refresh of the UI.
+      /**
+       * Performs an entire refresh of the UI, to reflect
+       * that all the input elements may need to be changed
+       * (especially due to changing dimensions).
+       */
       function refreshUi(){
         // Regenerate the checkbox elements
         var i; // X-position
@@ -427,7 +466,10 @@
         loadCurFrame();
       }
       
-      // Generate table code for the program memory
+      /**
+       * Generates table code for the LED cube program's memory.
+       * @param {Boolean} depthBeforeHeight Indicates if depth-height-width or height-depth-width ordering should be used.
+       */
       function toCode(depthBeforeHeight){
         // Close the dialog
         $("#dlgGenerateCodeAs").dialog("close");
@@ -459,7 +501,9 @@
         $("#dlgGenerateCode").dialog("open");
       }
       
-      // Show the "Save Data" dialog
+      /**
+       * Shows the "Save Data" dialog.
+       */
       function toObj(){
         // Since we stored everything as a single object, we just need to serialize this
         // to JSON.
@@ -472,7 +516,9 @@
         $("#dlgGenerateObj").dialog("open");
       }
       
-      // Load in object data from the "Load Data" dialog
+      /**
+       * Loads in object data from the "Load Data" dialog.
+       */
       function fromObj(){
         // Make sure non-whitespace was provided before doing anything else
         if ($.trim($("#loadObj").val()) === "") {
@@ -507,8 +553,10 @@
         
       }
       
-      // Insert a frame at the current position.
-      // withCopy indicates if the currently-selected frame should be copied.
+      /**
+       * Inserts a frame at the current position.
+       * @param {Boolean} withCopy If true, will copy the currently-selected frame into the new frame.
+       */
       function insertFrame(withCopy){
         // Disable editing in playback mode
         if (inEditMode === false) {
@@ -540,7 +588,9 @@
         refreshUi();
       }
       
-      // Delete the currently-selecte frame
+      /**
+       * Deletes the currently-selected frame.
+       */
       function deleteFrame(){
         // Disable editing in playback mode
         if (inEditMode === false) {
@@ -564,7 +614,9 @@
         refreshUi();
       }
       
-      // Move to the previous frame
+      /**
+       * Moves to the previous frame.
+       */
       function prevFrame(){
         // Decrement the current frame
         currentFrame -= 1;
@@ -578,7 +630,9 @@
         loadCurFrame();
       }
       
-      // Move to the next frame
+      /**
+       * Moves to the next frame.
+       */
       function nextFrame(){
         // Increment the current frame
         currentFrame += 1;
@@ -592,7 +646,9 @@
         loadCurFrame();
       }
       
-      // Apply a duration change
+      /**
+       * Applies a duration change.
+       */
       function editDuration(){
         // Disable editing in playback mode
         if (inEditMode === false) {
@@ -622,7 +678,9 @@
         }
       }
       
-      // Show/hide the preview dialog
+      /**
+       * Shows/hides the preview dialog.
+       */
       function previewToggle(){
         if (dlgPreview.dialog("isOpen")) {
           dlgPreview.dialog("close");
@@ -633,7 +691,9 @@
         }
       }
       
-      // Play/pause button
+      /**
+       * Toggles between editing/playback modes.
+       */
       function playToggle(){
         if (inEditMode === true) {
           // Currently editing, begin playback
@@ -648,7 +708,6 @@
           
           // Set the event timer to advance to the next frame 
           setTimeout(advancePlayback, globals.frameCollection[currentFrame].duration);
-          
         }
         else {
           // Currently in playback mode, go back to edit
@@ -663,7 +722,10 @@
         }
       }
       
-      // Toggle the value of an individual cell
+      /**
+       * Toggles the value of an individual cell.
+       * @param {jQuery.Event} event The event object. The frame ID should be the first element in the data collection.
+       */
       function toggleLED(event){
       
         // Get the cell index from the event data.
@@ -694,7 +756,10 @@
         renderCanvas(currentFrame, false);
       }
       
-      // Set all cells in a particular grid (i.e. one depth level) to a certain value
+      /**
+       * Set all cells in a particular grid (i.e. one depth level) to a certain value.
+       * @param {jQuery.Event} event The event object. The depth level should be the first element in the data collection. The value to use should be the second element.
+       */
       function setGrid(event){
         // Disable editing in playback mode
         if (inEditMode === false) {
@@ -722,7 +787,10 @@
         loadCurFrame();
       }
       
-      // Set all cells in a frame to a certain value
+      /**
+       * Sets all cells in the current frame to a certain value.
+       * @param {Number} val The new cell value.
+       */
       function setFrame(val){
         // Disable editing in playback mode
         if (inEditMode === false) {
@@ -739,12 +807,18 @@
         loadCurFrame();
       }
       
-      // Show a given dialog (referred to by ID)
+      /**
+       * Shows a given dialog.
+       * @param {String} dialog The dialog ID.
+       */
       function showDlg(dialog){
         $("#" + dialog).dialog("open");
       }
       
-      // Show a given menu (referred to by ID)
+      /**
+       * Shows a given menu.
+       * @param {String} menu The menu ID.
+       */
       function showMenu(menu){
         // Only proceed if the menu isn't already being shown
         if ($("#" + menu).is(':visible') === false) {
@@ -757,6 +831,9 @@
         }
       }
       
+      /**
+       * Creates a new animation.
+       */
       function createNew(){
         var width = parseInt($("#txtWidth").val(), 10);
         var height = parseInt($("#txtHeight").val(), 10);
