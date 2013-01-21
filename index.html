@@ -13,24 +13,68 @@
     </script>
     <script type="text/javascript" src="js/frame.js">
     </script>
-    <script type="text/javascript">
-      // Now that all external scripts have been loaded, it's initialization time!
-      
-      // Index of currently selected frame
+    <script type="text/javascript">    
+	  /**
+	   * The index (starting at 0) of the currently-selected frame.
+	   * @type {number}
+	   */
       var currentFrame = 0;
-      // Are we in "playback" or "edit" mode?
+	  
+	  /**
+	   * Indicates if we are in playback or edit mode.
+	   * @type {boolean}
+	   */
       var inEditMode = true;
       
-      // Cached selectors.
+	  /**
+	   * Cached selector for the frame list container.
+	   * @type {jQuery.Selector}
+	   */
       var lstFrames;
+	  
+	  /**
+	   * Cached selector for the frame list radio button.
+	   * @type {jQuery.Selector}
+	   */	  
       var radFrames;
+	 
+	  /**
+	   * Cached selector for the frame duration textbox.
+	   * @type {jQuery.Selector}
+	   */	  
       var txtDuration;
+	  
+	  /**
+	   * Cached selector for the preview dialog.
+	   * @type {jQuery.Selector}
+	   */	  
       var dlgPreview;
+	  
+	  /**
+	   * Cached selectors for each checkbox in the frame. 
+	   * The index of each element corresponds with its
+	   * cell number (starting at 0).
+	   * @type {Array.<jQuery.Selector>}
+	   */	  
       var checkboxSelectors = {};
+	  
+	  /**
+	   * Cached selectors for each frame button. The index
+	   * of each element corresponds with its frame
+	   * number (starting at 0).
+	   * @type {Array.<jQuery.Selector>}
+	   */
       var frameSelectors = {};
+	  
+	  /**
+	   * Canvas element that contains pre-rendered unlit LEDs.
+	   */	  
       var cvsCache;
       
-      // Stores global information.
+	  /**
+	   * Stores global state such as all of our animation information.
+	   * @type {ProgData}
+	   */
       var globals;
       
       /**

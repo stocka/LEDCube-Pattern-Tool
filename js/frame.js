@@ -1,8 +1,12 @@
 'use strict';
 
-// The minimum time that can be spent on a single LED
-// (derived from 90ms minimum for 27, aka 3x3x3, LEDs)
 // TODO: tweak TIME_PER_LED count
+/**
+ * The minimum time that can be spent on a single LED
+ * (derived from 90ms minimum for 27, aka 3x3x3, LEDs).
+ * @const
+ * @type {number}
+ */
 var TIME_PER_LED = Math.ceil(90.0 / 27.0);
 
 /**
