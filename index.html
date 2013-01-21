@@ -602,11 +602,11 @@
         
         if (globals.frameCollection[currentFrame].cells[i] === 1) {
           // Toggling from on to off
-          globals.frameCollection[currentFrame].cells[i] = 1;
+          globals.frameCollection[currentFrame].cells[i] = 0;
         }
         else {
           // Toggling from off to on
-          globals.frameCollection[currentFrame].cells[i] = 0;
+          globals.frameCollection[currentFrame].cells[i] = 1;
         }
         
         // Update the canvas
