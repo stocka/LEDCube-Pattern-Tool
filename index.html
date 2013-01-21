@@ -48,13 +48,13 @@
         globals.frameCollection[0] = new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth);
       }
       
-      // Render the canvas element.  Note that this will only go through
-      // the rendering process if the preview dialog is open.
-      function renderCanvas(preCache){
+      // Render the canvas element.
+      function renderCanvas(frameId, isPreview){
       
         // FUTURE: Change if canvas dimensions change
         var canvasHeight = 200;
         var canvasWidth = 220;
+        var preCache = (frameId < 0);
         
         // Skip over this if the preview dialog isn't visible
         // as long as we're not precaching
@@ -124,11 +124,14 @@
             
             var fullCircleRad = 2 * Math.PI;
             
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            // Don't clear the canvas if this is a preview
+            if (isPreview === false) {
+              ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            }
             
-            // If we're not in pre-cache mode, render in
+            // If we're not in pre-cache or preview mode, render in
             // the precached version of the grey LEDs.
-            if (preCache === false) {
+            if (preCache === false && isPreview === false) {
               ctx.drawImage(cvsCache, 0, 0);
             }
             
@@ -149,7 +152,7 @@
                   // when we're precaching, so we need to check
                   // that first.
                   if (preCache === false) {
-                    var curFrame = globals.frameCollection[currentFrame];
+                    var curFrame = globals.frameCollection[frameId];
                     isCurCellLit = (curFrame.cells[curFrame.getIndex(i, j, k)] === 1);
                   }
                   
@@ -172,8 +175,14 @@
                       ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
                     }
                     else {
-                      // Lit
-                      ctx.fillStyle = "#F39814";
+                      // Lit - use normal color for non-previews,
+                      // translucent red for previews
+                      if (isPreview === false) {
+                        ctx.fillStyle = "#F39814";
+                      }
+                      else {
+                        ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+                      }
                       ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
                     }
                     
@@ -211,8 +220,10 @@
           // Cache this selector
           frameSelectors[i] = radio;
           
-          // Add a label for the button
-          var radioLabel = $("<label />").attr("for", "radFrame" + i).html(i + 1);
+          // Add a label for the button.
+          // This will include mouseover/mouseout
+          // events for our preview.
+          var radioLabel = $("<label />").attr("for", "radFrame" + i).html(i + 1).mouseover([i], previewFrame).mouseout([i], stopPreviewFrame);
           lstFrames.append(radio);
           lstFrames.append(radioLabel);
           
@@ -253,11 +264,41 @@
           checkboxSelectors[i].button("refresh");
         }
         
-        // Render preview dialog
-        renderCanvas(false);
+        // Render canvas
+        renderCanvas(currentFrame, false);
         
         // Set duration value for textbox
         txtDuration.val(globals.frameCollection[currentFrame].duration);
+      }
+      
+      function previewFrame(event){
+        // Don't show mouseover preview in edit mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        var frameId = event.data[0];
+        
+        // Don't update the canvas if we're
+        // trying to preview the current frame.
+        if (frameId != currentFrame) {
+          renderCanvas(frameId, true);
+        }
+      }
+      
+      function stopPreviewFrame(event){
+        // Don't clear mouseover preview in edit mode
+        if (inEditMode === false) {
+          return;
+        }
+        
+        var frameId = event.data[0];
+        
+        // Don't re-draw the canvas if we're
+        // clearing the preview of the current frame.
+        if (frameId != currentFrame) {
+          renderCanvas(currentFrame, false);
+        }
       }
       
       function selFrame(event){
@@ -375,8 +416,9 @@
         $(".gridSqr").button();
         $(".grdFillBtn").button();
         
-        // Create canvas cache
-        renderCanvas(true);
+        // Create canvas cache - "-1"
+        // indicates this is a pre-cache
+        renderCanvas(-1, false);
         
         // Update the frame list
         updateFrameList();
@@ -587,7 +629,7 @@
         }
         else {
           dlgPreview.dialog("open");
-          renderCanvas(false);
+          renderCanvas(currentFrame, false);
         }
       }
       
@@ -649,7 +691,7 @@
         }
         
         // Update the canvas
-        renderCanvas(false);
+        renderCanvas(currentFrame, false);
       }
       
       // Set all cells in a particular grid (i.e. one depth level) to a certain value
