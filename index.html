@@ -833,17 +833,7 @@
           modal: true,
           autoOpen: false
         });
-        
-        // Generate the preview dialog
-        dlgPreview.dialog({
-          title: 'Preview',
-          width: 280,
-          height: 280,
-          resizable: false,
-          position: ['right', 'top'],
-          autoOpen: true
-        });
-        
+		 
         // Create the frame list dialog, also hiding the close button
         $("#dlgFrameList").dialog({
           title: 'Frames',
@@ -858,6 +848,16 @@
             // Hide the close button
             $(this).parent().children().children('.ui-dialog-titlebar-close').hide();
           }
+        });	
+        
+        // Generate the preview dialog
+        dlgPreview.dialog({
+          title: 'Preview',
+          width: 280,
+          height: 280,
+          resizable: false,
+          position: ['right', 'top'],
+          autoOpen: true
         });
         
         // Init data model
