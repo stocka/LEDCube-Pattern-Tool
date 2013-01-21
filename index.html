@@ -97,7 +97,7 @@
         font-size: 80%;
       }
     </style>
-    <script type="text/javascript">     
+    <script type="text/javascript">
       // Now that all external scripts have been loaded, it's initialization time!
       
       // Index of currently selected frame
@@ -107,9 +107,11 @@
       
       // Cached selectors.
       var lstFrames;
+      var radFrames;
       var txtDuration;
       var dlgPreview;
       var checkboxSelectors = {};
+      var frameSelectors = {};
       
       // Stores global information.
       var globals;
@@ -139,11 +141,25 @@
         // Regenerate contents of frame list
         var i;
         lstFrames.empty();
+        radFrames = {};
+        
         for (i = 0; i < globals.frameCollection.length; i += 1) {
-          // We have to apply "left" otherwise Chrome won't work for some reason.
-          // See http://forum.jquery.com/topic/radio-button-grouping-not-working-cross-browser-jquery-ui regarding
-          lstFrames.append('<input type="radio" name="radFrames" id="radFrame' + i + '" value="' + i + '" onclick="javascript:selFrame(' + i + ')"/><label for="radFrame' + i + '">' + (i + 1) + '</label>');
+        
+          // Build the radio button for this frame
+          var radio = $("<input type='radio' />").attr("name", "radFrames").attr("id", "radFrame" + i).click([i], selFrame).val(i);
+          
+          // Cache this selector
+          frameSelectors[i] = radio;
+          
+          // Add a label for the button
+          var radioLabel = $("<label />").attr("for", "radFrame" + i).html(i + 1);
+          lstFrames.append(radio);
+          lstFrames.append(radioLabel);
+          
         }
+        
+        // Cache radFrames selector
+        radFrames = $('input[name=radFrames]');
         
         // Make selectable again
         lstFrames.buttonset();
@@ -152,9 +168,10 @@
       
       // Sets all the light input elements to match the currently selected frame
       function loadCurFrame(){
+      
         // Select this radio button
-        $("input[name=radFrames]").val(currentFrame);
-        $("#radFrame" + currentFrame).prop("checked", true);
+        radFrames.val(currentFrame);
+        frameSelectors[currentFrame].prop("checked", true);
         
         // Refresh the UI
         $("#lstFrames > input").button("refresh");
@@ -183,8 +200,8 @@
         txtDuration.val(globals.frameCollection[currentFrame].duration);
       }
       
-      function selFrame(i){
-        currentFrame = i;
+      function selFrame(event){
+        currentFrame = event.data[0];
         loadCurFrame();
       }
       
@@ -252,33 +269,33 @@
                 canvasY = startY + vGridSep * (globals.cubeDepth - k - 1) + vSep * j;
                 // The starting X is going to decrease with every iteration
                 canvasX = startX + hGridSep * k;
-				
+                
                 for (i = 0; i < globals.cubeWidth; i += 1) {
+                
+                  // At the moment, we have to do each
+                  // LED as an individual path so that
+                  // we get the color for each LED right;
+                  ctx.beginPath();
                   
-				  // At the moment, we have to do each
-				  // LED as an individual path so that
-				  // we get the color for each LED right;
-				  ctx.beginPath();
-				  
                   if (curFrame.cells[curFrame.getIndex(i, j, k)] === 1) {
                     // Lit
-					ctx.fillStyle = "#F39814";
+                    ctx.fillStyle = "#F39814";
                     ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
                   }
                   else {
                     // Not lit
-					ctx.fillStyle = "#AAAAAA";
+                    ctx.fillStyle = "#AAAAAA";
                     ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
                   }
                   
-				  // Render the path
-				  ctx.closePath();
+                  // Render the path
+                  ctx.closePath();
                   ctx.fill();
-				  
+                  
                   canvasX = canvasX + hSep;
                   canvasY = canvasY + vSep;
-				  
-                }	
+                  
+                }
               }
             }
           }
@@ -297,93 +314,74 @@
         $("#divGrid").empty();
         
         for (k = 0; k < globals.cubeDepth; k += 1) {
-			
-		  // Set up our basic grid div
-		  var gridDiv = $("<div />").
-		  				attr("id", "grid"+k).
-						attr("class", "gridBlk");
-			
+        
+          // Set up our basic grid div
+          var gridDiv = $("<div />").attr("id", "grid" + k).attr("class", "gridBlk");
+          
           for (j = 0; j < globals.cubeHeight; j += 1) {
-	
-			// Add div for this row
-			var rowDiv = $("<div />").
-						 attr("id", 'row' + k + '-' + j);
-			
+          
+            // Add div for this row
+            var rowDiv = $("<div />").attr("id", 'row' + k + '-' + j);
+            
             for (i = 0; i < globals.cubeWidth; i += 1) {
-				
+            
               // Add checkbox item for this square
-			  var squareBtn = $('<input type="checkbox" class="gridSqr" />').
-			  				  attr("id", "chk"+index).
-							  click([index], toggleLED);
-							  
-			  gridDiv.append(squareBtn);				  
-							  
-			  // Add label for the checkbox item
-			  var squareLabel = $("<label />").
-			  					attr("for", "chk" + index).
-								html('<span class="noselect">&nbsp;</span>');
-			  gridDiv.append(squareLabel);
-			  				  
+              var squareBtn = $('<input type="checkbox" class="gridSqr" />').attr("id", "chk" + index).click([index], toggleLED);
+              
+              gridDiv.append(squareBtn);
+              
+              // Add label for the checkbox item
+              var squareLabel = $("<label />").attr("for", "chk" + index).html('<span class="noselect">&nbsp;</span>');
+              gridDiv.append(squareLabel);
+              
               index += 1; // Increment the index
             }
             
-			gridDiv.append(rowDiv);
+            gridDiv.append(rowDiv);
           }
           
-		  // Add line break before fill actions
-		  gridDiv.append("<br />");
-		  
+          // Add line break before fill actions
+          gridDiv.append("<br />");
+          
           // Add grid fill/clear
-		  var gridOpsDiv = $("<div />");
-		  
-		  // Build our fill div/button
-		  var fillOpDiv = $("<div />").
-		  				  attr("class", "left");
-						  
-		  var fillBtn = $("<input type='button' />").
-		  				 attr("id", "btnFill" + k).
-						 attr("class", "grdFillBtn").
-						 attr("title", "Fill all LEDs in this grid.").
-						 click([k, 1], setGrid).
-						 val("F");
-		  
-		  fillOpDiv.append(fillBtn);
-		  gridOpsDiv.append(fillOpDiv);
-		  
-		  // Build our clear div/button
-		  var clearOpDiv = $("<div />").
-		  				   attr("class", "right");
-						   
-		  var clearBtn = $("<input type='button' />").
-		  				 attr("id", "btnEmpty" + k).
-						 attr("class", "grdFillBtn").
-						 attr("title", "Clear all LEDs in this grid.").
-						 click([k, 0], setGrid).
-						 val("E");
-		  
-		  clearOpDiv.append(clearBtn);
-		  gridOpsDiv.append(clearOpDiv);
-		  
-		  // Now add the operations div to the grid
-		  gridDiv.append(gridOpsDiv);		  			 
+          var gridOpsDiv = $("<div />");
+          
+          // Build our fill div/button
+          var fillOpDiv = $("<div />").attr("class", "left");
+          
+          var fillBtn = $("<input type='button' />").attr("id", "btnFill" + k).attr("class", "grdFillBtn").attr("title", "Fill all LEDs in this grid.").click([k, 1], setGrid).val("F");
+          
+          fillOpDiv.append(fillBtn);
+          gridOpsDiv.append(fillOpDiv);
+          
+          // Build our clear div/button
+          var clearOpDiv = $("<div />").attr("class", "right");
+          
+          var clearBtn = $("<input type='button' />").attr("id", "btnEmpty" + k).attr("class", "grdFillBtn").attr("title", "Clear all LEDs in this grid.").click([k, 0], setGrid).val("E");
+          
+          clearOpDiv.append(clearBtn);
+          gridOpsDiv.append(clearOpDiv);
+          
+          // Now add the operations div to the grid
+          gridDiv.append(gridOpsDiv);
           
           // Add guideline depth text
-		  var gridGuide = $('<div class="desc" />');
-		  
+          var gridGuide = $('<div class="desc" />');
+          
           if (k === 0) {
-		  	gridGuide.text("Front");
+            gridGuide.text("Front");
           }
           else 
             if (k === globals.cubeDepth - 1) {
-				gridGuide.text("Back");
+              gridGuide.text("Back");
             }
             else {
               // HACK: figure out a better way of aligning
-			  gridGuide.html("&nbsp;");
+              gridGuide.html("&nbsp;");
             }
-			
-		  // Add guide to grid div
-		  gridDiv.append(gridGuide);
+          
+          // Add guide to grid div
+          gridDiv.append(gridGuide);
           
           // Add div to DOM
           $("#divGrid").append(gridDiv);
@@ -646,10 +644,10 @@
       
       // Toggle the value of an individual cell
       function toggleLED(event){
-	  	
-		// Get the cell index from the event data.
-		var i = event.data[0];
-		
+      
+        // Get the cell index from the event data.
+        var i = event.data[0];
+        
         // Disable editing in playback mode
         if (inEditMode === false) {
           // Make sure the actual input element matches the underlying cell value
@@ -682,11 +680,11 @@
           return;
         }
         
-		// Get grid number and value to fill
-		// the grid with from the event data
-		var grid = event.data[0];
-		var val = event.data[1];
-		
+        // Get grid number and value to fill
+        // the grid with from the event data
+        var grid = event.data[0];
+        var val = event.data[1];
+        
         var i;
         
         // We're only setting one grid (i.e. one particular depth level), so let's find
