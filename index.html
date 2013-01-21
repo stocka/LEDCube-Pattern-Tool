@@ -243,8 +243,7 @@
             var curFrame = globals.frameCollection[currentFrame];
             var fullCircleRad = 2 * Math.PI;
             
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
             
             // We need to draw back-to-front
             for (k = globals.cubeDepth - 1; k >= 0; k -= 1) {
@@ -253,31 +252,33 @@
                 canvasY = startY + vGridSep * (globals.cubeDepth - k - 1) + vSep * j;
                 // The starting X is going to decrease with every iteration
                 canvasX = startX + hGridSep * k;
-                
-				// Start the path. We originally were
-				// creating a path for each cell
-				// but this is more efficient.
-				ctx.beginPath();
 				
                 for (i = 0; i < globals.cubeWidth; i += 1) {
                   
+				  // At the moment, we have to do each
+				  // LED as an individual path so that
+				  // we get the color for each LED right;
+				  ctx.beginPath();
+				  
                   if (curFrame.cells[curFrame.getIndex(i, j, k)] === 1) {
                     // Lit
+					ctx.fillStyle = "#F39814";
                     ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
-                    ctx.fillStyle = "#F39814";
                   }
                   else {
                     // Not lit
+					ctx.fillStyle = "#AAAAAA";
                     ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
-                    ctx.fillStyle = "#AAAAAA";
                   }
                   
+				  // Render the path
+				  ctx.closePath();
+                  ctx.fill();
+				  
                   canvasX = canvasX + hSep;
                   canvasY = canvasY + vSep;
-                }
-				
-				ctx.closePath();
-                ctx.fill();
+				  
+                }	
               }
             }
           }
@@ -293,46 +294,99 @@
         var index = 0;
         
         // Clear contents of divGrid
-        $("#divGrid").html("");
+        $("#divGrid").empty();
         
         for (k = 0; k < globals.cubeDepth; k += 1) {
-          var gridText = '<div id="grid' + k + '" class="gridBlk">';
-          
+			
+		  // Set up our basic grid div
+		  var gridDiv = $("<div />").
+		  				attr("id", "grid"+k).
+						attr("class", "gridBlk");
+			
           for (j = 0; j < globals.cubeHeight; j += 1) {
-            // Add div for this row
-            gridText = gridText + '<div id="row' + k + '-' + j + '">';
+	
+			// Add div for this row
+			var rowDiv = $("<div />").
+						 attr("id", 'row' + k + '-' + j);
+			
             for (i = 0; i < globals.cubeWidth; i += 1) {
+				
               // Add checkbox item for this square
-              gridText = gridText + '<input type="checkbox" class="gridSqr" id="chk' + index + '" onclick="javascript:toggleLED(' + index + ');"/><label for="chk' + index + '"><span class="noselect">&nbsp;</span></label>';
+			  var squareBtn = $('<input type="checkbox" class="gridSqr" />').
+			  				  attr("id", "chk"+index).
+							  click([index], toggleLED);
+							  
+			  gridDiv.append(squareBtn);				  
+							  
+			  // Add label for the checkbox item
+			  var squareLabel = $("<label />").
+			  					attr("for", "chk" + index).
+								html('<span class="noselect">&nbsp;</span>');
+			  gridDiv.append(squareLabel);
+			  				  
               index += 1; // Increment the index
             }
             
-            // Add row closing tag
-            gridText = gridText + '</div>';
+			gridDiv.append(rowDiv);
           }
           
-          // Add grid fill
-          gridText = gridText + '<br><div><div class="left"><input type="button" class="grdFillBtn" id="btnFill' + k + '" onclick="javascript:setGrid(' + k + ',1);" value="F"/></div>';
-          gridText = gridText + '<div class="right"><input type="button" class="grdFillBtn" id="btnEmpty' + k + '" onclick="javascript:setGrid(' + k + ',0);" value="E"/></div>';
+		  // Add line break before fill actions
+		  gridDiv.append("<br />");
+		  
+          // Add grid fill/clear
+		  var gridOpsDiv = $("<div />");
+		  
+		  // Build our fill div/button
+		  var fillOpDiv = $("<div />").
+		  				  attr("class", "left");
+						  
+		  var fillBtn = $("<input type='button' />").
+		  				 attr("id", "btnFill" + k).
+						 attr("class", "grdFillBtn").
+						 attr("title", "Fill all LEDs in this grid.").
+						 click([k, 1], setGrid).
+						 val("F");
+		  
+		  fillOpDiv.append(fillBtn);
+		  gridOpsDiv.append(fillOpDiv);
+		  
+		  // Build our clear div/button
+		  var clearOpDiv = $("<div />").
+		  				   attr("class", "right");
+						   
+		  var clearBtn = $("<input type='button' />").
+		  				 attr("id", "btnEmpty" + k).
+						 attr("class", "grdFillBtn").
+						 attr("title", "Clear all LEDs in this grid.").
+						 click([k, 0], setGrid).
+						 val("E");
+		  
+		  clearOpDiv.append(clearBtn);
+		  gridOpsDiv.append(clearOpDiv);
+		  
+		  // Now add the operations div to the grid
+		  gridDiv.append(gridOpsDiv);		  			 
           
           // Add guideline depth text
+		  var gridGuide = $('<div class="desc" />');
+		  
           if (k === 0) {
-            gridText = gridText + '<div class="desc">Front</div>';
+		  	gridGuide.text("Front");
           }
           else 
             if (k === globals.cubeDepth - 1) {
-              gridText = gridText + '<div class="desc">Back</div>';
+				gridGuide.text("Back");
             }
             else {
               // HACK: figure out a better way of aligning
-              gridText = gridText + '<div class="desc">&nbsp;</div>';
+			  gridGuide.html("&nbsp;");
             }
-          
-          // Add grid closing tag
-          gridText = gridText + "</div>\n";
+			
+		  // Add guide to grid div
+		  gridDiv.append(gridGuide);
           
           // Add div to DOM
-          $("#divGrid").append(gridText);
+          $("#divGrid").append(gridDiv);
           
         }
         
@@ -591,7 +645,11 @@
       }
       
       // Toggle the value of an individual cell
-      function toggleLED(i){
+      function toggleLED(event){
+	  	
+		// Get the cell index from the event data.
+		var i = event.data[0];
+		
         // Disable editing in playback mode
         if (inEditMode === false) {
           // Make sure the actual input element matches the underlying cell value
@@ -618,12 +676,17 @@
       }
       
       // Set all cells in a particular grid (i.e. one depth level) to a certain value
-      function setGrid(grid, val){
+      function setGrid(event){
         // Disable editing in playback mode
         if (inEditMode === false) {
           return;
         }
         
+		// Get grid number and value to fill
+		// the grid with from the event data
+		var grid = event.data[0];
+		var val = event.data[1];
+		
         var i;
         
         // We're only setting one grid (i.e. one particular depth level), so let's find
