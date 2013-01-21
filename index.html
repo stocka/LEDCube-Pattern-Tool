@@ -38,9 +38,9 @@
        * all information about an animation.
        * @constructor
        * @this {ProgData}
-       * @param {Number} width The cube width.
-       * @param {Number} height The cube height.
-       * @param {Number} depth The cube depth.
+       * @param {number} width The cube width.
+       * @param {number} height The cube height.
+       * @param {number} depth The cube depth.
        */
       function ProgData(width, height, depth){
         this.cubeWidth = width;
@@ -51,9 +51,9 @@
       
       /**
        * Initializes global state for a new animation.
-       * @param {Number} width The cube width.
-       * @param {Number} height The cube height.
-       * @param {Number} depth The cube depth.
+       * @param {number} width The cube width.
+       * @param {number} height The cube height.
+       * @param {number} depth The cube depth.
        */
       function initGlobals(width, height, depth){
         globals = new ProgData(width, height, depth);
@@ -62,8 +62,8 @@
       
       /**
        * Renders the canvas element.
-       * @param {Number} frameId The ID of the frame, or -1 for precaching the unlit LED canvas.
-       * @param {Boolean} isPreview True if this is a preview (meaning that we don't clear the canvas out and use a different fill style)
+       * @param {number} frameId The ID of the frame, or -1 for precaching the unlit LED canvas.
+       * @param {boolean} isPreview True if this is a preview (meaning that we don't clear the canvas out and use a different fill style)
        */
       function renderCanvas(frameId, isPreview){
       
@@ -468,7 +468,7 @@
       
       /**
        * Generates table code for the LED cube program's memory.
-       * @param {Boolean} depthBeforeHeight Indicates if depth-height-width or height-depth-width ordering should be used.
+       * @param {boolean} depthBeforeHeight Indicates if depth-height-width or height-depth-width ordering should be used.
        */
       function toCode(depthBeforeHeight){
         // Close the dialog
@@ -555,7 +555,7 @@
       
       /**
        * Inserts a frame at the current position.
-       * @param {Boolean} withCopy If true, will copy the currently-selected frame into the new frame.
+       * @param {boolean} withCopy If true, will copy the currently-selected frame into the new frame.
        */
       function insertFrame(withCopy){
         // Disable editing in playback mode
@@ -789,7 +789,7 @@
       
       /**
        * Sets all cells in the current frame to a certain value.
-       * @param {Number} val The new cell value.
+       * @param {number} val The new cell value.
        */
       function setFrame(val){
         // Disable editing in playback mode
