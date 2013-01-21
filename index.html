@@ -4,7 +4,7 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
     <title>LED Cube Pattern Generation Tool</title>
     <link type="text/css" href="http://code.jquery.com/ui/1.10.0/themes/smoothness/jquery-ui.css" rel="stylesheet" />
-	<link type="text/css" href="css/style.css" rel="stylesheet" />
+    <link type="text/css" href="css/style.css" rel="stylesheet" />
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.0.js">
     </script>
     <script type="text/javascript" src="http://code.jquery.com/ui/1.10.0/jquery-ui.js">
@@ -13,9 +13,6 @@
     </script>
     <script type="text/javascript" src="js/frame.js">
     </script>
-    <style type="text/css">
-      
-    </style>
     <script type="text/javascript">
       // Now that all external scripts have been loaded, it's initialization time!
       
@@ -31,6 +28,7 @@
       var dlgPreview;
       var checkboxSelectors = {};
       var frameSelectors = {};
+      var cvsCache;
       
       // Stores global information.
       var globals;
@@ -48,6 +46,149 @@
       function initGlobals(width, height, depth){
         globals = new ProgData(width, height, depth);
         globals.frameCollection[0] = new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth);
+      }
+      
+      // Render the canvas element.  Note that this will only go through
+      // the rendering process if the preview dialog is open.
+      function renderCanvas(preCache){
+      
+        // FUTURE: Change if canvas dimensions change
+        var canvasHeight = 200;
+        var canvasWidth = 220;
+        
+        // Skip over this if the preview dialog isn't visible
+        // as long as we're not precaching
+        if (preCache || dlgPreview.dialog("isOpen")) {
+        
+          // Get our canvas/canvas context.
+          var canvas;
+          var ctx = null;
+          
+          if (preCache === true) {
+            // If we're in pre-cache mode, we're
+            // creating an in-memory canvas
+            // and writing all grey LEDs in.
+            
+            // Create a canvas if we need to,
+            // otherwise use the one we already
+            // have stored in cvsCache
+            if (cvsCache == null) {
+              canvas = document.createElement("canvas");
+              canvas.height = canvasHeight;
+              canvas.width = canvasWidth;
+              cvsCache = canvas;
+            }
+            else {
+              canvas = cvsCache;
+            }
+            
+          }
+          else {
+            // Working with the canvas directly
+            // in the page. 
+            // jQuery doesn't natively support canvas stuff right now,
+            // so we have to use plain 'ol Javascript for manipulating that.
+            // Oh well.
+            canvas = document.getElementById('cvsPreview');
+          }
+          
+          // Only proceed if we support the canvas tag in our browser
+          if (canvas != null && canvas.getContext) {
+            ctx = canvas.getContext('2d');
+          }
+          
+          if (ctx != null) {
+          
+            // Initialize vars
+            var canvasX; // Current X pos
+            var canvasY; // Current Y pos
+            var onRadius = 4; // Radius for "on" LEDs
+            var offRadius = 2; // Radius for "off" LEDs
+            var i; // current horiz-pos
+            var j; // current vert-pos
+            var k; // current depth-pos
+            // TODO: modify vGridSep/vSep and hGridSep/hSep based on dimensions 
+            var vGridSep = 20; // Vertical separation between grids
+            var hGridSep = 30; // Horizontal separation between grids
+            var vSep = 10; // Vertical separation between rows in a grid
+            var hSep = 15; // Horizontal separation between columns in a grid
+            // Calculate initial offsets by determining the dimensions of the cube to render,
+            // subtracting them from the available space, and dividing by 2
+            // Initial offset for X
+            var startX = (canvasWidth - (hGridSep * (globals.cubeDepth - 1)) - (hSep * globals.cubeWidth)) /
+            2;
+            
+            // Initial offset for Y
+            var startY = (canvasHeight - (vGridSep * (globals.cubeDepth - 1)) - (vSep * globals.cubeHeight)) /
+            2;
+            
+            var fullCircleRad = 2 * Math.PI;
+            
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            
+            // If we're not in pre-cache mode, render in
+            // the precached version of the grey LEDs.
+            if (preCache === false) {
+              ctx.drawImage(cvsCache, 0, 0);
+            }
+            
+            // We need to draw back-to-front
+            for (k = globals.cubeDepth - 1; k >= 0; k -= 1) {
+              for (j = 0; j < globals.cubeHeight; j += 1) {
+                // The starting Y is going to increase with every iteration
+                canvasY = startY + vGridSep * (globals.cubeDepth - k - 1) + vSep * j;
+                // The starting X is going to decrease with every iteration
+                canvasX = startX + hGridSep * k;
+                
+                for (i = 0; i < globals.cubeWidth; i += 1) {
+                
+                  // Figure out if this sucker is lit.
+                  var isCurCellLit = false;
+                  
+                  // Our current frame isn't going to be defined
+                  // when we're precaching, so we need to check
+                  // that first.
+                  if (preCache === false) {
+                    var curFrame = globals.frameCollection[currentFrame];
+                    isCurCellLit = (curFrame.cells[curFrame.getIndex(i, j, k)] === 1);
+                  }
+                  
+                  // Only render this if we are
+                  // either in pre-cache mode, or if
+                  // the LED is lit.
+                  if (preCache === true || isCurCellLit === true) {
+                  
+                    // At the moment, we have to do each
+                    // LED as an individual path so that
+                    // we get the color for each LED right.
+                    ctx.beginPath();
+                    
+                    // At this point, we know that if we're
+                    // precaching, it'll always be gray, but if
+                    // we're not, it'll always be lit.
+                    if (preCache === true) {
+                      // Not lit
+                      ctx.fillStyle = "#AAAAAA";
+                      ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
+                    }
+                    else {
+                      // Lit
+                      ctx.fillStyle = "#F39814";
+                      ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
+                    }
+                    
+                    // Render the path
+                    ctx.closePath();
+                    ctx.fill();
+                  }
+                  
+                  canvasX = canvasX + hSep;
+                  canvasY = canvasY + vSep;
+                }
+              }
+            }
+          }
+        }
       }
       
       // Update the list of frames in the dialog
@@ -113,7 +254,7 @@
         }
         
         // Render preview dialog
-        renderCanvas();
+        renderCanvas(false);
         
         // Set duration value for textbox
         txtDuration.val(globals.frameCollection[currentFrame].duration);
@@ -134,90 +275,6 @@
           
           // Set the event timer to advance to the next frame 
           setTimeout(advancePlayback, globals.frameCollection[currentFrame].duration);
-        }
-      }
-      
-      // Render the canvas element.  Note that this will only go through
-      // the rendering process if the preview dialog is open.
-      function renderCanvas(){
-        // Skip over this if the preview dialog isn't visible
-        if (dlgPreview.dialog("isOpen")) {
-          // jQuery doesn't natively support canvas stuff right now,
-          // so we have to use plain 'ol Javascript for manipulating that.
-          // Oh well.
-          var canvas = document.getElementById('cvsPreview');
-          
-          // Only proceed if we support the canvas tag in our browser
-          if (canvas.getContext) {
-            var ctx = canvas.getContext('2d');
-            
-            // Initialize vars
-            var canvasHeight = 200; // TODO: change if the canvas dimensions change
-            var canvasWidth = 220; // TODO: change if the canvas dimensions change
-            var canvasX; // Current X pos
-            var canvasY; // Current Y pos
-            var onRadius = 4; // Radius for "on" LEDs
-            var offRadius = 2; // Radius for "off" LEDs
-            var i; // current horiz-pos
-            var j; // current vert-pos
-            var k; // current depth-pos
-            // TODO: modify vGridSep/vSep and hGridSep/hSep based on dimensions 
-            var vGridSep = 20; // Vertical separation between grids
-            var hGridSep = 30; // Horizontal separation between grids
-            var vSep = 10; // Vertical separation between rows in a grid
-            var hSep = 15; // Horizontal separation between columns in a grid
-            // Calculate initial offsets by determining the dimensions of the cube to render,
-            // subtracting them from the available space, and dividing by 2
-            // Initial offset for X
-            var startX = (canvasWidth - (hGridSep * (globals.cubeDepth - 1)) - (hSep * globals.cubeWidth)) /
-            2;
-            
-            // Initial offset for Y
-            var startY = (canvasHeight - (vGridSep * (globals.cubeDepth - 1)) - (vSep * globals.cubeHeight)) /
-            2;
-            
-            var curFrame = globals.frameCollection[currentFrame];
-            var fullCircleRad = 2 * Math.PI;
-            
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-            
-            // We need to draw back-to-front
-            for (k = globals.cubeDepth - 1; k >= 0; k -= 1) {
-              for (j = 0; j < globals.cubeHeight; j += 1) {
-                // The starting Y is going to increase with every iteration
-                canvasY = startY + vGridSep * (globals.cubeDepth - k - 1) + vSep * j;
-                // The starting X is going to decrease with every iteration
-                canvasX = startX + hGridSep * k;
-                
-                for (i = 0; i < globals.cubeWidth; i += 1) {
-                
-                  // At the moment, we have to do each
-                  // LED as an individual path so that
-                  // we get the color for each LED right;
-                  ctx.beginPath();
-                  
-                  if (curFrame.cells[curFrame.getIndex(i, j, k)] === 1) {
-                    // Lit
-                    ctx.fillStyle = "#F39814";
-                    ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
-                  }
-                  else {
-                    // Not lit
-                    ctx.fillStyle = "#AAAAAA";
-                    ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
-                  }
-                  
-                  // Render the path
-                  ctx.closePath();
-                  ctx.fill();
-                  
-                  canvasX = canvasX + hSep;
-                  canvasY = canvasY + vSep;
-                  
-                }
-              }
-            }
-          }
         }
       }
       
@@ -317,6 +374,9 @@
         // Make jQuery buttons
         $(".gridSqr").button();
         $(".grdFillBtn").button();
+        
+        // Create canvas cache
+        renderCanvas(true);
         
         // Update the frame list
         updateFrameList();
@@ -527,7 +587,7 @@
         }
         else {
           dlgPreview.dialog("open");
-          renderCanvas();
+          renderCanvas(false);
         }
       }
       
@@ -589,7 +649,7 @@
         }
         
         // Update the canvas
-        renderCanvas();
+        renderCanvas(false);
       }
       
       // Set all cells in a particular grid (i.e. one depth level) to a certain value
@@ -752,7 +812,7 @@
           modal: true,
           autoOpen: false
         });
-		 
+        
         // Create the frame list dialog, also hiding the close button
         $("#dlgFrameList").dialog({
           title: 'Frames',
@@ -767,7 +827,7 @@
             // Hide the close button
             $(this).parent().children().children('.ui-dialog-titlebar-close').hide();
           }
-        });	
+        });
         
         // Generate the preview dialog
         dlgPreview.dialog({
