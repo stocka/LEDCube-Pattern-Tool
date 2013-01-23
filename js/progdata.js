@@ -9,8 +9,10 @@
  * @param {number} width The cube width.
  * @param {number} height The cube height.
  * @param {number} depth The cube depth.
+ * @param {number} canvasWidth The width of the preview canvas element.
+ * @param {number} canvasHeight The height of the preview canvas element.
  */
-function ProgData(width, height, depth) {
+function ProgData(width, height, depth, canvasWidth, canvasHeight) {
 
     /**
      * The width of the current animation.
@@ -37,18 +39,17 @@ function ProgData(width, height, depth) {
     this.frameCollection = [];
 
     // Store some extra canvas rendering calculations.
-    // FUTURE: Change if canvas dimensions change
     /**
      * The height of the canvas.
      * @type {number}
      */
-    this.canvasHeight = 200;
+    this.canvasHeight = canvasHeight;
 
     /**
      * The width of the canvas.
      * @type {number}
      */
-    this.canvasWidth = 220;
+    this.canvasWidth = canvasWidth;
 
     /**
      * The radius for a full circle (2 radians)

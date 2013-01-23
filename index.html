@@ -143,7 +143,8 @@
        * @param {number} depth The cube depth.
        */
       function initGlobals(width, height, depth){
-        globals = new ProgData(width, height, depth);
+        // FUTURE: Change when canvas dimensions change
+        globals = new ProgData(width, height, depth, 220, 200 );
         globals.frameCollection[0] = new Frame(globals.cubeWidth, globals.cubeHeight, globals.cubeDepth);
       }
       
