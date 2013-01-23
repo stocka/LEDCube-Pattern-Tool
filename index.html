@@ -14,67 +14,67 @@
     <script type="text/javascript" src="js/frame.js">
     </script>
     <script type="text/javascript">    
-	  /**
-	   * The index (starting at 0) of the currently-selected frame.
-	   * @type {number}
-	   */
+      /**
+       * The index (starting at 0) of the currently-selected frame.
+       * @type {number}
+       */
       var currentFrame = 0;
-	  
-	  /**
-	   * Indicates if we are in playback or edit mode.
-	   * @type {boolean}
-	   */
+      
+      /**
+       * Indicates if we are in playback or edit mode.
+       * @type {boolean}
+       */
       var inEditMode = true;
       
-	  /**
-	   * Cached selector for the frame list container.
-	   * @type {jQuery.Selector}
-	   */
+      /**
+       * Cached selector for the frame list container.
+       * @type {jQuery.Selector}
+       */
       var lstFrames;
-	  
-	  /**
-	   * Cached selector for the frame list radio button.
-	   * @type {jQuery.Selector}
-	   */	  
+      
+      /**
+       * Cached selector for the frame list radio button.
+       * @type {jQuery.Selector}
+       */	  
       var radFrames;
-	 
-	  /**
-	   * Cached selector for the frame duration textbox.
-	   * @type {jQuery.Selector}
-	   */	  
+     
+      /**
+       * Cached selector for the frame duration textbox.
+       * @type {jQuery.Selector}
+       */	  
       var txtDuration;
-	  
-	  /**
-	   * Cached selector for the preview dialog.
-	   * @type {jQuery.Selector}
-	   */	  
+      
+      /**
+       * Cached selector for the preview dialog.
+       * @type {jQuery.Selector}
+       */	  
       var dlgPreview;
-	  
-	  /**
-	   * Cached selectors for each checkbox in the frame. 
-	   * The index of each element corresponds with its
-	   * cell number (starting at 0).
-	   * @type {Array.<jQuery.Selector>}
-	   */	  
+      
+      /**
+       * Cached selectors for each checkbox in the frame. 
+       * The index of each element corresponds with its
+       * cell number (starting at 0).
+       * @type {Array.<jQuery.Selector>}
+       */	  
       var checkboxSelectors = {};
-	  
-	  /**
-	   * Cached selectors for each frame button. The index
-	   * of each element corresponds with its frame
-	   * number (starting at 0).
-	   * @type {Array.<jQuery.Selector>}
-	   */
+      
+      /**
+       * Cached selectors for each frame button. The index
+       * of each element corresponds with its frame
+       * number (starting at 0).
+       * @type {Array.<jQuery.Selector>}
+       */
       var frameSelectors = {};
-	  
-	  /**
-	   * Canvas element that contains pre-rendered unlit LEDs.
-	   */	  
+      
+      /**
+       * Canvas element that contains pre-rendered unlit LEDs.
+       */	  
       var cvsCache;
       
-	  /**
-	   * Stores global state such as all of our animation information.
-	   * @type {ProgData}
-	   */
+      /**
+       * Stores global state such as all of our animation information.
+       * @type {ProgData}
+       */
       var globals;
       
       /**
@@ -91,6 +91,72 @@
         this.cubeHeight = height;
         this.cubeDepth = depth;
         this.frameCollection = [];
+        
+        // Store some extra canvas rendering calculations.
+        // FUTURE: Change if canvas dimensions change
+        /**
+         * The height of the canvas.
+         * @type {number}
+         */
+        this.canvasHeight = 200;
+        
+        /**
+         * The width of the canvas.
+         * @type {number}
+         */
+        this.canvasWidth = 220;
+        
+        /**
+         * The radius for a full circle (2 radians)
+         * @type {number}
+         */
+        this.canvasFullCircleRad = 2 * Math.PI;
+        
+        // TODO: modify separation values below based on dimensions 
+        
+        /**
+         * The vertical separation between canvas grids.
+         * @type {number}
+         */
+        this.canvasGridVertSep = 20;
+            
+        /**
+         * The horizontal separation between canvas grids.
+         * @type {number}
+         */
+        this.canvasGridHorizSep = 30;
+            
+        /**
+         * The vertical separation between rows in a canvas grid.
+         * @type {number}
+         */
+        this.canvasRowSep = 10;
+        
+        // Horizontal separation between columns in a grid
+        /**
+         * The horizontal separation between columns in a canvas grid.
+         * @type {number}
+         */
+        this.canvasColSep = 15; 
+        
+        // Calculate initial offsets by determining the dimensions of the cube to render,
+        // subtracting them from the available space, and dividing by 2
+
+        /**
+         * The initial horizontal rendering offset for the canvas.
+         * The cell at (0,0,0) will be drawn at this position.
+         * @type {number}
+         */
+        this.canvasStartX = 
+        (this.canvasWidth - (this.canvasGridHorizSep * (depth - 1)) - (this.canvasColSep * width)) / 2;
+            
+        /**
+         * The initial vertical rendering offset for the canvas.
+         * The cell at (0,0,0) will be drawn at this position.
+         * @type {number}
+         */
+        this.canvasStartY = 
+        (this.canvasHeight - (this.canvasGridVertSep * (depth - 1)) - (this.canvasRowSep * height)) / 2;	
       }
       
       /**
@@ -112,9 +178,7 @@
        */
       function renderFrame(frameId, isPreview, fillStyle){
       
-        // FUTURE: Change if canvas dimensions change
-        var canvasHeight = 200;
-        var canvasWidth = 220;
+        // Are we pre-caching the unlit cube?
         var preCache = (frameId < 0);
         
         // Skip over this if the preview dialog isn't visible
@@ -135,8 +199,8 @@
             // have stored in cvsCache
             if (cvsCache == null) {
               canvas = document.createElement("canvas");
-              canvas.height = canvasHeight;
-              canvas.width = canvasWidth;
+              canvas.height = globals.canvasHeight;
+              canvas.width = globals.canvasWidth;
               cvsCache = canvas;
             }
             else {
@@ -164,40 +228,20 @@
             var canvasX; // Current X pos
             var canvasY; // Current Y pos
             
-			// Figure out the radius for the LED.
-			// If we're precaching, this will always
-			// be unlit, and we'll only render the
-			// lit ones in other instances.
-			var dotRadius;
-			if (preCache === true) {
-			  dotRadius = 2; // Unlit
-			} else {
-			  dotRadius = 4; // Lit
-			}
-			
-            var i; // current horiz-pos
-            var j; // current vert-pos
-            var k; // current depth-pos
-            // TODO: modify vGridSep/vSep and hGridSep/hSep based on dimensions 
-            var vGridSep = 20; // Vertical separation between grids
-            var hGridSep = 30; // Horizontal separation between grids
-            var vSep = 10; // Vertical separation between rows in a grid
-            var hSep = 15; // Horizontal separation between columns in a grid
-            // Calculate initial offsets by determining the dimensions of the cube to render,
-            // subtracting them from the available space, and dividing by 2
-            // Initial offset for X
-            var startX = (canvasWidth - (hGridSep * (globals.cubeDepth - 1)) - (hSep * globals.cubeWidth)) /
-            2;
-            
-            // Initial offset for Y
-            var startY = (canvasHeight - (vGridSep * (globals.cubeDepth - 1)) - (vSep * globals.cubeHeight)) /
-            2;
-            
-            var fullCircleRad = 2 * Math.PI;
+            // Figure out the radius for the LED.
+            // If we're precaching, this will always
+            // be unlit, and we'll only render the
+            // lit ones in other instances.
+            var dotRadius;
+            if (preCache === true) {
+              dotRadius = 2; // Unlit
+            } else {
+              dotRadius = 4; // Lit
+            }
             
             // Don't clear the canvas if this is a preview
             if (isPreview === false) {
-              ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+              ctx.clearRect(0, 0, globals.canvasWidth, globals.canvasHeight);
             }
             
             // If we're not in pre-cache or preview mode, render in
@@ -206,15 +250,30 @@
               ctx.drawImage(cvsCache, 0, 0);
             }
             
+            var col;
+            var row;
+            var depth;
+            
             // We need to draw back-to-front
-            for (k = globals.cubeDepth - 1; k >= 0; k -= 1) {
-              for (j = 0; j < globals.cubeHeight; j += 1) {
-                // The starting Y is going to increase with every iteration
-                canvasY = startY + vGridSep * (globals.cubeDepth - k - 1) + vSep * j;
-                // The starting X is going to decrease with every iteration
-                canvasX = startX + hGridSep * k;
+            for (depth = globals.cubeDepth - 1; depth >= 0; depth -= 1) {
+              for (row = 0; row < globals.cubeHeight; row += 1) {
                 
-                for (i = 0; i < globals.cubeWidth; i += 1) {
+                // The starting Y is going to increase with every iteration
+                canvasY = globals.canvasStartY
+                
+                // Move up based on which depth level we're on.
+                canvasY += globals.canvasGridVertSep * (globals.cubeDepth - depth - 1);
+                
+                // Move up based on which row we're on.
+                canvasY += globals.canvasRowSep * row;
+                
+                // The starting X is going to decrease with every iteration
+                canvasX = globals.canvasStartX
+                
+                // Move right based on which depth level we're on.
+                canvasX += globals.canvasGridHorizSep * depth;
+                
+                for (col = 0; col < globals.cubeWidth; col += 1) {
                 
                   // Figure out if this sucker is lit.
                   var isCurCellLit = false;
@@ -224,7 +283,7 @@
                   // that first.
                   if (preCache === false) {
                     var curFrame = globals.frameCollection[frameId];
-                    isCurCellLit = (curFrame.cells[curFrame.getIndex(i, j, k)] === 1);
+                    isCurCellLit = (curFrame.cells[curFrame.getIndex(col, row, depth)] === 1);
                   }
                   
                   // Only render this if we are
@@ -237,31 +296,32 @@
                     // we get the color for each LED right.
                     ctx.beginPath();
                     
-					ctx.fillStyle = fillStyle;
-					ctx.arc(canvasX, canvasY, dotRadius, 0, fullCircleRad, false);
-					
+                    ctx.fillStyle = fillStyle;
+                    ctx.arc(canvasX, canvasY, dotRadius, 0, globals.canvasFullCircleRad, false);
+                    
                     // Render the path
                     ctx.closePath();
                     ctx.fill();
                   }
                   
-                  canvasX = canvasX + hSep;
-                  canvasY = canvasY + vSep;
+                  // Push up/right based on our row/column separation.
+                  canvasX = canvasX + globals.canvasColSep;
+                  canvasY = canvasY + globals.canvasRowSep;
                 }
               }
             }
           }
         }
       }
-	  
-	  /**
-	   * Re-draws the preview canvas with
-	   * frames as appropriate.
-	   */
-	  function drawPreview() {
-	  	// Render current frame - use "lit" style
+      
+      /**
+       * Re-draws the preview canvas with
+       * frames as appropriate.
+       */
+      function drawPreview() {
+        // Render current frame - use "lit" style
         renderFrame(currentFrame, false, "#F39814");
-	  }
+      }
       
       /**
        * Updates the list of frames in the dialog.
@@ -353,7 +413,7 @@
         // Don't update the canvas if we're
         // trying to preview the current frame.
         if (frameId != currentFrame) {
-		  // Use a translucent red fill for the preview.
+          // Use a translucent red fill for the preview.
           renderFrame(frameId, true, "rgba(255, 0, 0, 0.5)");
         }
       }
@@ -373,8 +433,8 @@
         // Don't re-draw the canvas if we're
         // clearing the preview of the current frame.
         if (frameId != currentFrame) {
-        	// Re-draw the preview.
-        	drawPreview();
+            // Re-draw the preview.
+            drawPreview();
         }
       }
       
@@ -506,7 +566,7 @@
         
         // Create canvas cache - "-1"
         // indicates this is a pre-cache.
-		// Use the gray dot fill style.
+        // Use the gray dot fill style.
         renderFrame(-1, false, "#AAAAAA");
         
         // Update the frame list
@@ -664,55 +724,55 @@
         refreshUi();
       }
       
-	  /**
-	   * Gets the frame before the currently-selected frame.
-	   * @return {number} The previous frame index.
-	   */
-	  function getPrevFrame() {
-		var prevFrame = currentFrame - 1;
-		
-		// Wrap around
-		if (prevFrame < 0) {
-		  prevFrame = globals.frameCollection.length - 1;
-		}
-		
-		return prevFrame;
-	  }
-	  
-	  /**
-	   * Moves to the previous frame.
-	   */
-	  function prevFrame(){
-		currentFrame = getPrevFrame();
-		
-		// Update the UI to match the newly selected frame
-		loadCurFrame();
-	  }
-	  
-	  /**
-	   * Gets the frame after the currently-selected frame.
-	   * @return {number} The next frame index.
-	   */
-	  function getNextFrame() {
-		var nextFrame = currentFrame + 1;
-		
-		// Wrap around
-		if (nextFrame >= globals.frameCollection.length) {
-		  nextFrame = 0;
-		}
-		
-		return nextFrame;
-	  }
-	  
-	  /**
-	   * Moves to the next frame.
-	   */
-	  function nextFrame(){
-		currentFrame = getNextFrame();
-		
-		// Update the UI to match the newly selected frame
-		loadCurFrame();
-	  }
+      /**
+       * Gets the frame before the currently-selected frame.
+       * @return {number} The previous frame index.
+       */
+      function getPrevFrame() {
+        var prevFrame = currentFrame - 1;
+        
+        // Wrap around
+        if (prevFrame < 0) {
+          prevFrame = globals.frameCollection.length - 1;
+        }
+        
+        return prevFrame;
+      }
+      
+      /**
+       * Moves to the previous frame.
+       */
+      function prevFrame(){
+        currentFrame = getPrevFrame();
+        
+        // Update the UI to match the newly selected frame
+        loadCurFrame();
+      }
+      
+      /**
+       * Gets the frame after the currently-selected frame.
+       * @return {number} The next frame index.
+       */
+      function getNextFrame() {
+        var nextFrame = currentFrame + 1;
+        
+        // Wrap around
+        if (nextFrame >= globals.frameCollection.length) {
+          nextFrame = 0;
+        }
+        
+        return nextFrame;
+      }
+      
+      /**
+       * Moves to the next frame.
+       */
+      function nextFrame(){
+        currentFrame = getNextFrame();
+        
+        // Update the UI to match the newly selected frame
+        loadCurFrame();
+      }
       
       /**
        * Applies a duration change.
@@ -1085,8 +1145,8 @@
             Depth:
           </label>
           <input id="txtDepth" type="text" value="3" />
-		  <hr/>
-		  <input id="btnNew" type="button" value="Create" class="btnDisableOnPlayback" onclick="javascript:createNew();"/>
+          <hr/>
+          <input id="btnNew" type="button" value="Create" class="btnDisableOnPlayback" onclick="javascript:createNew();"/>
         </fieldset>
       </div>
       <div id="dlgGenerateCode" style="font-size: 50%;">
