@@ -81,15 +81,36 @@
        * Creates an instance of ProgData, which stores
        * all information about an animation.
        * @constructor
+       * @struct
        * @this {ProgData}
        * @param {number} width The cube width.
        * @param {number} height The cube height.
        * @param {number} depth The cube depth.
        */
       function ProgData(width, height, depth){
+        
+        /**
+         * The width of the current animation.
+         * @type {number}
+         */
         this.cubeWidth = width;
+        
+        /**
+         * The height of the current animation.
+         * @type {number}
+         */
         this.cubeHeight = height;
+        
+        /**
+         * The depth of the current animation.
+         * @type {number}
+         */
         this.cubeDepth = depth;
+        
+        /**
+         * The frames in this animation.
+         * @type {Array.<Frame>}
+         */
         this.frameCollection = [];
         
         // Store some extra canvas rendering calculations.
@@ -132,7 +153,6 @@
          */
         this.canvasRowSep = 10;
         
-        // Horizontal separation between columns in a grid
         /**
          * The horizontal separation between columns in a canvas grid.
          * @type {number}
