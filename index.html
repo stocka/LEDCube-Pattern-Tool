@@ -14,7 +14,9 @@
     <script type="text/javascript" src="js/frame.js">
     </script>
     <script type="text/javascript" src="js/progdata.js">
-    </script>	
+    </script>
+    <script type="text/javascript" src="js/fillstyles.js">
+    </script>
     <script type="text/javascript">    
       /**
        * The index (starting at 0) of the currently-selected frame.
@@ -78,57 +80,6 @@
        * Canvas element that contains pre-rendered unlit LEDs.
        */	  
       var cvsCache;
-      
-      /**
-       * The fill style to use for unlit LEDs.
-       * @type {string}
-       */
-      var unlitFillStyle = "#AAAAAA";
-      
-      /**
-       * The fill style to use for lit LEDs in the currently-selected frame.
-       * @type {string}
-       */	  
-      var curFrameFillStyle = "#F39814";
-      
-      /**
-       * The fill style to use for lit LEDs in the previous frame.
-       * @type {string}
-       */
-      var prevFrameFillStyle = "rgba(0, 255, 255, 0.45)";
-      
-      /**
-       * The fill style, without alpha transparency, to use for 
-       * lit LEDs in the previous frame.
-       * @type {string}
-       */
-      var prevFrameFillStyleNoAlpha = "rgb(0, 255, 255)";
-
-      /**
-       * The fill style to use for lit LEDs in the next frame.
-       * @type {string}
-       */
-      var nextFrameFillStyle = "rgba(255, 0, 255, 0.45)";
-
-      /**
-       * The fill style, without alpha transparency, to use for 
-       * lit LEDs in the next frame.
-       * @type {string}
-       */
-      var nextFrameFillStyleNoAlpha = "rgb(255, 0, 255)";
-      
-      /**
-       * The fill style to use for lit LEDs in the frame being previewed by a mouseover.
-       * @type {string}
-       */	  
-      var previewFrameFillStyle = "rgba(0, 255, 0, 0.7)";
-      
-      /**
-       * The fill style, without alpha transparency, to use for 
-       * lit LEDs in the frame being previewed by a mouseover.
-       * @type {string}
-       */     
-      var previewFrameFillStyleNoAlpha = "rgba(0, 255, 0)";	  
       
       /**
        * Stores global state such as all of our animation information.
@@ -303,7 +254,7 @@
         var nextFrameId = getNextFrame();
         
         // Render current frame
-        renderFrame(currentFrame, false, curFrameFillStyle);
+        renderFrame(currentFrame, false, FillStyles.CURRENT_FRAME);
         
         // Only do onion-skinning if we're in edit mode
         // and we have it checked
@@ -311,13 +262,13 @@
             // Onion-skin the previous frame if it's
             // not our current/next frame
             if (prevFrameId != currentFrame && prevFrameId != nextFrameId) {
-                renderFrame(prevFrameId, true, prevFrameFillStyle);
+                renderFrame(prevFrameId, true, FillStyles.PREV_FRAME);
             }
             
             // Onion-skin the next frame if it's
             // not our current frame
             if (nextFrameId != currentFrame) {
-                renderFrame(nextFrameId, true, nextFrameFillStyle);
+                renderFrame(nextFrameId, true, FillStyles.NEXT_FRAME);
             }	
         }
       }
@@ -412,7 +363,7 @@
         // Don't update the canvas if we're
         // trying to preview the current frame.
         if (frameId != currentFrame) {
-          renderFrame(frameId, true, previewFrameFillStyle);
+          renderFrame(frameId, true, FillStyles.MOUSEOVER_FRAME);
         }
       }
       
@@ -564,7 +515,7 @@
         
         // Create canvas cache - "-1"
         // indicates this is a pre-cache.
-        renderFrame(-1, false, unlitFillStyle);
+        renderFrame(-1, false, FillStyles.UNLIT);
         
         // Update the frame list
         updateFrameList();
@@ -1074,9 +1025,9 @@
 
         // Fill in our color explanations
         // based on our JS consts.
-        $("#spnPrevFrameColor").css("background-color", prevFrameFillStyleNoAlpha);
-        $("#spnNextFrameColor").css("background-color", nextFrameFillStyleNoAlpha);
-        $("#spnMouseoverFrameColor").css("background-color", previewFrameFillStyleNoAlpha);
+        $("#spnPrevFrameColor").css("background-color", FillStyles.PREV_FRAME_NOALPHA);
+        $("#spnNextFrameColor").css("background-color", FillStyles.NEXT_FRAME_NOALPHA);
+        $("#spnMouseoverFrameColor").css("background-color", FillStyles.MOUSEOVER_FRAME_NOALPHA);
         
         // Create the onion-skinning dialog, and make modal
         $("#dlgOnionSkinHelp").dialog({
