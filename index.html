@@ -658,37 +658,55 @@
         refreshUi();
       }
       
-      /**
-       * Moves to the previous frame.
-       */
-      function prevFrame(){
-        // Decrement the current frame
-        currentFrame -= 1;
-        
-        // Wrap around
-        if (currentFrame < 0) {
-          currentFrame = globals.frameCollection.length - 1;
-        }
-        
-        // Update the UI to match the newly selected frame
-        loadCurFrame();
-      }
-      
-      /**
-       * Moves to the next frame.
-       */
-      function nextFrame(){
-        // Increment the current frame
-        currentFrame += 1;
-        
-        // Wrap around
-        if (currentFrame >= globals.frameCollection.length) {
-          currentFrame = 0;
-        }
-        
-        // Update the UI to match the newly selected frame
-        loadCurFrame();
-      }
+	  /**
+	   * Gets the frame before the currently-selected frame.
+	   * @return {number} The previous frame index.
+	   */
+	  function getPrevFrame() {
+		var prevFrame = currentFrame - 1;
+		
+		// Wrap around
+		if (prevFrame < 0) {
+		  prevFrame = globals.frameCollection.length - 1;
+		}
+		
+		return prevFrame;
+	  }
+	  
+	  /**
+	   * Moves to the previous frame.
+	   */
+	  function prevFrame(){
+		currentFrame = getPrevFrame();
+		
+		// Update the UI to match the newly selected frame
+		loadCurFrame();
+	  }
+	  
+	  /**
+	   * Gets the frame after the currently-selected frame.
+	   * @return {number} The next frame index.
+	   */
+	  function getNextFrame() {
+		var nextFrame = currentFrame + 1;
+		
+		// Wrap around
+		if (nextFrame >= globals.frameCollection.length) {
+		  nextFrame = 0;
+		}
+		
+		return nextFrame;
+	  }
+	  
+	  /**
+	   * Moves to the next frame.
+	   */
+	  function nextFrame(){
+		currentFrame = getNextFrame();
+		
+		// Update the UI to match the newly selected frame
+		loadCurFrame();
+	  }
       
       /**
        * Applies a duration change.
