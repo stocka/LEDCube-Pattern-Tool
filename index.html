@@ -931,7 +931,7 @@
         // Create the generate dialog, and make modal
         $("#dlgGenerateCode").dialog({
           title: 'Generated Code',
-          width: 470,
+          width: 500,
           height: 300,
           resizable: false,
           position: ['center', 'middle'],
@@ -942,7 +942,7 @@
         // Create the generate as (i.e. the code format) dialog, and make modal
         $("#dlgGenerateCodeAs").dialog({
           title: 'Choose Code Format',
-          width: 470,
+          width: 500,
           height: 300,
           resizable: false,
           position: ['center', 'middle'],
@@ -953,7 +953,7 @@
         // Create the load dialog, and make modal
         $("#dlgLoadObj").dialog({
           title: 'Load Data',
-          width: 470,
+          width: 500,
           height: 300,
           resizable: false,
           position: ['center', 'middle'],
@@ -964,7 +964,7 @@
         // Create the save dialog, and make modal
         $("#dlgGenerateObj").dialog({
           title: 'Save Data',
-          width: 470,
+          width: 500,
           height: 300,
           resizable: false,
           position: ['center', 'middle'],
@@ -975,7 +975,7 @@
         // Create the new dialog, and make modal
         $("#dlgNew").dialog({
           title: 'New Animation',
-          width: 470,
+          width: 500,
           height: 300,
           resizable: false,
           position: ['center', 'middle'],
@@ -986,7 +986,7 @@
         // Create the about dialog, and make modal
         $("#dlgAbout").dialog({
           title: 'About',
-          width: 470,
+          width: 500,
           height: 300,
           resizable: false,
           position: ['center', 'middle'],
@@ -1066,22 +1066,22 @@
         </div>
       </div>
       <div id="dlgNew">
-        <label for="txtWidth">
-          Width:
-        </label>
-        <input id="txtWidth" type="text" value="3" />
-        <br/>
-        <label for="txtHeight">
-          Height:
-        </label>
-        <input id="txtHeight" type="text" value="3" />
-        <br/>
-        <label for="txtDepth">
-          Depth:
-        </label>
-        <input id="txtDepth" type="text" value="3" />
-        <br/>
-        <hr/><input id="btnNew" type="button" value="Create" class="btnDisableOnPlayback" onclick="javascript:createNew();"/>
+        <fieldset id="fldstNewAnim">
+          <label for="txtWidth">
+            Width:
+          </label>
+          <input id="txtWidth" type="text" value="3" />
+          <label for="txtHeight">
+            Height:
+          </label>
+          <input id="txtHeight" type="text" value="3" />
+          <label for="txtDepth">
+            Depth:
+          </label>
+          <input id="txtDepth" type="text" value="3" />
+		  <hr/>
+		  <input id="btnNew" type="button" value="Create" class="btnDisableOnPlayback" onclick="javascript:createNew();"/>
+        </fieldset>
       </div>
       <div id="dlgGenerateCode" style="font-size: 50%;">
         <h4>This code can be used within the firmware for your LED cube.</h4>

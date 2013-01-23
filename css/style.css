@@ -81,3 +81,18 @@ input.grdFillBtn {
   display: none;
   font-size: 80%;
 }
+
+#fldstNewAnim {
+	margin: 0px;
+	padding: 0px;
+	border: none;
+}
+
+#fldstNewAnim label {
+	width: 100px;
+	display: block;
+	margin-top: 0.2em;
+}
+
+#fldstNewAnim hr {
+	margin: 0.4em 0 0.4em 0;
