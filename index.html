@@ -105,11 +105,11 @@
       }
       
       /**
-       * Renders the canvas element.
+       * Renders the specified frame to the canvas element.
        * @param {number} frameId The ID of the frame, or -1 for precaching the unlit LED canvas.
        * @param {boolean} isPreview True if this is a preview (meaning that we don't clear the canvas out and use a different fill style)
        */
-      function renderCanvas(frameId, isPreview){
+      function renderFrame(frameId, isPreview){
       
         // FUTURE: Change if canvas dimensions change
         var canvasHeight = 200;
@@ -259,6 +259,15 @@
           }
         }
       }
+	  
+	  /**
+	   * Re-draws the preview canvas with
+	   * frames as appropriate.
+	   */
+	  function drawPreview() {
+	  	// Render current frame
+        renderFrame(currentFrame, false);
+	  }
       
       /**
        * Updates the list of frames in the dialog.
@@ -328,8 +337,8 @@
           checkboxSelectors[i].button("refresh");
         }
         
-        // Render canvas
-        renderCanvas(currentFrame, false);
+        // Re-draw the preview.
+        drawPreview();
         
         // Set duration value for textbox
         txtDuration.val(globals.frameCollection[currentFrame].duration);
@@ -350,7 +359,7 @@
         // Don't update the canvas if we're
         // trying to preview the current frame.
         if (frameId != currentFrame) {
-          renderCanvas(frameId, true);
+          renderFrame(frameId, true);
         }
       }
       
@@ -369,7 +378,8 @@
         // Don't re-draw the canvas if we're
         // clearing the preview of the current frame.
         if (frameId != currentFrame) {
-          renderCanvas(currentFrame, false);
+        	// Re-draw the preview.
+        	drawPreview();
         }
       }
       
@@ -501,7 +511,7 @@
         
         // Create canvas cache - "-1"
         // indicates this is a pre-cache
-        renderCanvas(-1, false);
+        renderFrame(-1, false);
         
         // Update the frame list
         updateFrameList();
@@ -749,7 +759,7 @@
         }
         else {
           dlgPreview.dialog("open");
-          renderCanvas(currentFrame, false);
+          drawPreview();
         }
       }
       
@@ -814,8 +824,8 @@
           globals.frameCollection[currentFrame].cells[i] = 1;
         }
         
-        // Update the canvas
-        renderCanvas(currentFrame, false);
+        // Re-draw the preview.
+        drawPreview();
       }
       
       /**
