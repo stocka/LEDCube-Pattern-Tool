@@ -97,3 +97,14 @@ input.grdFillBtn {
 #fldstNewAnim hr {
 	margin: 0.4em 0 0.4em 0;
 }
+
+span.color-exp {
+	display: inline-block;
+	margin-top: 1px;
+	width: 1em;
+	height: 1em;
+	vertical-align: text-bottom;
+	overflow: hidden;
+	border: 1px solid #DCDCDC;
+	border-radius: 3px;
+}
