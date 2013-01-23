@@ -107,9 +107,10 @@
       /**
        * Renders the specified frame to the canvas element.
        * @param {number} frameId The ID of the frame, or -1 for precaching the unlit LED canvas.
-       * @param {boolean} isPreview True if this is a preview (meaning that we don't clear the canvas out and use a different fill style)
+       * @param {boolean} isPreview True if this is a preview (meaning that we don't clear the canvas out).
+       * @param {string} fillStyle The fill style to use for any rendered dots.
        */
-      function renderFrame(frameId, isPreview){
+      function renderFrame(frameId, isPreview, fillStyle){
       
         // FUTURE: Change if canvas dimensions change
         var canvasHeight = 200;
@@ -162,8 +163,18 @@
             // Initialize vars
             var canvasX; // Current X pos
             var canvasY; // Current Y pos
-            var onRadius = 4; // Radius for "on" LEDs
-            var offRadius = 2; // Radius for "off" LEDs
+            
+			// Figure out the radius for the LED.
+			// If we're precaching, this will always
+			// be unlit, and we'll only render the
+			// lit ones in other instances.
+			var dotRadius;
+			if (preCache === true) {
+			  dotRadius = 2; // Unlit
+			} else {
+			  dotRadius = 4; // Lit
+			}
+			
             var i; // current horiz-pos
             var j; // current vert-pos
             var k; // current depth-pos
@@ -226,26 +237,9 @@
                     // we get the color for each LED right.
                     ctx.beginPath();
                     
-                    // At this point, we know that if we're
-                    // precaching, it'll always be gray, but if
-                    // we're not, it'll always be lit.
-                    if (preCache === true) {
-                      // Not lit
-                      ctx.fillStyle = "#AAAAAA";
-                      ctx.arc(canvasX, canvasY, offRadius, 0, fullCircleRad, false);
-                    }
-                    else {
-                      // Lit - use normal color for non-previews,
-                      // translucent red for previews
-                      if (isPreview === false) {
-                        ctx.fillStyle = "#F39814";
-                      }
-                      else {
-                        ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-                      }
-                      ctx.arc(canvasX, canvasY, onRadius, 0, fullCircleRad, false);
-                    }
-                    
+					ctx.fillStyle = fillStyle;
+					ctx.arc(canvasX, canvasY, dotRadius, 0, fullCircleRad, false);
+					
                     // Render the path
                     ctx.closePath();
                     ctx.fill();
@@ -265,8 +259,8 @@
 	   * frames as appropriate.
 	   */
 	  function drawPreview() {
-	  	// Render current frame
-        renderFrame(currentFrame, false);
+	  	// Render current frame - use "lit" style
+        renderFrame(currentFrame, false, "#F39814");
 	  }
       
       /**
@@ -359,7 +353,8 @@
         // Don't update the canvas if we're
         // trying to preview the current frame.
         if (frameId != currentFrame) {
-          renderFrame(frameId, true);
+		  // Use a translucent red fill for the preview.
+          renderFrame(frameId, true, "rgba(255, 0, 0, 0.5)");
         }
       }
       
@@ -510,8 +505,9 @@
         $(".grdFillBtn").button();
         
         // Create canvas cache - "-1"
-        // indicates this is a pre-cache
-        renderFrame(-1, false);
+        // indicates this is a pre-cache.
+		// Use the gray dot fill style.
+        renderFrame(-1, false, "#AAAAAA");
         
         // Update the frame list
         updateFrameList();
