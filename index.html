@@ -1064,6 +1064,15 @@
           position: ['right', 'top'],
           autoOpen: true
         });	
+
+        // Make hitting "enter" when in the duration
+        // textbox attempt to apply the duration change
+        txtDuration.keyup(function () {
+          if (event.which == 13) {
+            editDuration();
+            event.preventDefault();
+          }
+        });
         
         // Init data model
         initGlobals(3, 3, 3);
