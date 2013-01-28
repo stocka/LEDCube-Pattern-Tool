@@ -600,6 +600,8 @@
           // We need to re-add in function definitions because the're not stored in JSON
           var i;
           for (i = 0; i < globals.frameCollection.length; i += 1) {
+            globals.frameCollection[i].getTimePerLed = Frame.prototype.getTimePerLed;
+            globals.frameCollection[i].getMinDuration = Frame.prototype.getMinDuration;
             globals.frameCollection[i].getIndex = Frame.prototype.getIndex;
             globals.frameCollection[i].setCell = Frame.prototype.setCell;
             globals.frameCollection[i].toCode = Frame.prototype.toCode;
