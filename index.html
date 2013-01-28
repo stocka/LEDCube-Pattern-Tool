@@ -743,8 +743,7 @@
         try {
           // Attempt to parse the duration value
           var durationVal = parseInt(txtDuration.val(), 10);
-          // Minimum duration: time per LED const * # of LEDs
-          var minDuration = Math.ceil(TIME_PER_LED * globals.frameCollection[currentFrame].cells.length);
+          var minDuration = globals.frameCollection[currentFrame].getMinDuration();
           
           // Figure out if this duration is too small, and display a message if that's the case
           if (durationVal < minDuration) {

@@ -1,14 +1,5 @@
 'use strict';
 
-// TODO: tweak TIME_PER_LED count
-/**
- * The minimum time that can be spent on a single LED
- * (derived from 90ms minimum for 27, aka 3x3x3, LEDs).
- * @const
- * @type {number}
- */
-var TIME_PER_LED = Math.ceil(90.0 / 27.0);
-
 /**
  * Creates a new frame instance.
  *
@@ -27,7 +18,7 @@ function Frame(width, height, depth){
   this.depth = depth;
   
   // Initialize a duration (in ms)
-  this.duration = TIME_PER_LED * width * height * depth;
+  this.duration = Math.ceil(90.0 / 27.0) * width * height * depth;
   
   // Initialize the cells in the frame...
   this.cells = [];
@@ -38,6 +29,25 @@ function Frame(width, height, depth){
   for (i = 0; i < width * height * depth; i += 1) {
     this.cells[i] = 0;
   }
+}
+
+/**
+ * Returns the minimum time that can be spent on a single LED
+ * (derived from 90ms minimum for 27, aka 3x3x3, LEDs).
+ * @returns {number}
+ */
+Frame.prototype.getTimePerLed = function () {
+  // TODO: tweak as necessary
+  return Math.ceil(90.0 / 27.0);
+};
+
+/*
+ * Returns the minimum duration value, given the dimensions
+ * of this frame.
+ * @returns {number}
+ */
+Frame.prototype.getMinDuration = function () {
+  return Math.ceil(this.getTimePerLed() * this.cells.length);
 }
 
 /**
