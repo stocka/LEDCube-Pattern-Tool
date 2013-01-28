@@ -290,7 +290,7 @@
         for (i = 0; i < globals.frameCollection.length; i += 1) {
         
           // Build the radio button for this frame
-          var radio = $("<input type='radio' />").attr("name", "radFrames").attr("id", "radFrame" + i).click([i], selFrame).val(i);
+          var radio = $("<input type='radio' />").attr("name", "radFrames").attr("id", "radFrame" + i).click([i], selFrame).val(i).data("pos", i);
           
           // Cache this selector
           frameSelectors[i] = radio;
@@ -298,7 +298,7 @@
           // Add a label for the button.
           // This will include mouseover/mouseout
           // events for our preview.
-          var radioLabel = $("<label />").attr("for", "radFrame" + i).html(i + 1).mouseover([i], previewFrame).mouseout([i], stopPreviewFrame);
+          var radioLabel = $("<label />").attr("for", "radFrame" + i).html(i + 1).mouseover([i], previewFrame).mouseout([i], stopPreviewFrame).data("pos", i);
           lstFrames.append(radio);
           lstFrames.append(radioLabel);
           
@@ -612,9 +612,6 @@
           refreshUi();
         } 
         catch (e) {
-          // An error happened, reset the globals object
-          initGlobals(3, 3, 3);
-          
           alert("An error occurred when attempting to load your data.  Please ensure that it is formatted correctly.");
         }
         
@@ -651,8 +648,9 @@
         // Switch to new frame
         currentFrame += 1;
         
-        // Refresh everything, since we inserted a new frame
-        refreshUi();
+        // Refresh current frame and frame list
+        updateFrameList();
+        loadCurFrame();
       }
       
       /**
@@ -677,8 +675,9 @@
           currentFrame = globals.frameCollection.length - 1;
         }
         
-        // Refresh everything
-        refreshUi();
+        // Refresh current frame and frame list
+        updateFrameList();
+        loadCurFrame();
       }
       
       /**
