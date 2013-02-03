@@ -2,21 +2,14 @@ body {
   font-family: Verdana, Arial, sans-serif;
 }
 
-#divFrameContainer {
-  border: 1px black solid;
-  padding: 2px;
-  margin-bottom: 4px;
-  overflow: auto;
-  white-space: nowrap;
-  height: 70%;
-}
-
 #lstFrames {
-  margin: 0;
-  padding: 0;
+  border: 1px #dcdcdc solid;
+  margin: 0px 0px 8px 0px;
+  padding: 2px;
   font-size: 100%;
-  width: 100%;
-  height: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
 
 /* Make all of the frames in the list big */

@@ -340,7 +340,7 @@
           // State probably changed, so refresh
           checkboxSelectors[i].button("refresh");
         }
-        
+
         // Re-draw the preview.
         drawPreview();
         
@@ -1044,15 +1044,18 @@
         $("#dlgFrameList").dialog({
           title: 'Frames',
           width: 700,
-          height: 170,
-          minHeight: 170,
+          height: 180,
+          minHeight: 180,
           minWidth: 550,
-          maxHeight: 170,
+          maxHeight: 180,
           position: ['center', 'bottom'],
           closeOnEscape: false,
           open: function(event, ui){
             // Hide the close button
             $(this).parent().children().children('.ui-dialog-titlebar-close').hide();
+            // Make sure the entire frame list doesn't scroll -
+            // lstFrames will handle all scrolling for us.
+            $("#dlgFrameList").css("overflow", "hidden");
           }
         });
         
@@ -1105,10 +1108,8 @@
         </div>
       </div>
       <div id="dlgFrameList" style="font-size: 50%;">
-        <div id="divFrameContainer">
-          <div id="lstFrames">
-            <!-- should get filled in later by updateFrameList() -->
-          </div>
+        <div id="lstFrames">
+          <!-- should get filled in later by updateFrameList() -->
         </div>
         <div style="float: left;">
           <input id="btnPrevFrame" type="button" value="<<" class="btnDisableOnPlayback" onclick="javascript:prevFrame();"/><input id="btnPlay" type="button" value="Play" onclick="javascript:playToggle();"/><input id="btnNextFrame" type="button" value=">>" class="btnDisableOnPlayback" onclick="javascript:nextFrame();"/>
