@@ -48,7 +48,7 @@ Frame.prototype.getTimePerLed = function () {
  */
 Frame.prototype.getMinDuration = function () {
   return Math.ceil(this.getTimePerLed() * this.cells.length);
-}
+};
 
 /**
  * Returns the one-dimensional index for a 3-dimensional array.
@@ -57,7 +57,7 @@ Frame.prototype.getMinDuration = function () {
  * @param {number} y The y-coordinate of the cell (0 is topmost).
  * @param {number} z The z-coordinate of the cell (0 is in front).
  */
-Frame.prototype.getIndex = function(x, y, z){
+Frame.prototype.getIndex = function (x, y, z) {
   // Least significant part of this coord is x (because it goes left to right first)
   // Next least significant part of this coord is y (because it goes top to bottom next)
   // Most significant part of this coord is z (because it goes front to back last)
@@ -72,7 +72,7 @@ Frame.prototype.getIndex = function(x, y, z){
  * @param {number} z The z-coordinate of the cell (0 is in front).
  * @param {number} value Whether the cell is "lit" or not (either 1 or 0).
  */
-Frame.prototype.setCell = function(x, y, z, value){
+Frame.prototype.setCell = function (x, y, z, value) {
   this.cells[this.getIndex(x, y, z)] = value;
 };
 
@@ -82,7 +82,7 @@ Frame.prototype.setCell = function(x, y, z, value){
  * @param {boolean} depthBeforeHeight True if depth is less significant than height for code generation, false if height is less significant than depth (width is always least significant).
  * @returns {string} The code representation of the frame.
  */
-Frame.prototype.toCode = function(depthBeforeHeight){
+Frame.prototype.toCode = function (depthBeforeHeight) {
   var str = "";
   var i; // X-position
   var j; // Y-position

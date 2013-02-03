@@ -12,7 +12,7 @@
  * @param {number} canvasWidth The width of the preview canvas element.
  * @param {number} canvasHeight The height of the preview canvas element.
  */
-function ProgData(width, height, depth, canvasWidth, canvasHeight) {
+function ProgData (width, height, depth, canvasWidth, canvasHeight) {
 
     /**
      * The width of the current animation.
