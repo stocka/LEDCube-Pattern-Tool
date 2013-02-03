@@ -298,7 +298,7 @@
           // Add a label for the button.
           // This will include mouseover/mouseout
           // events for our preview.
-          var radioLabel = $("<label />").attr("for", "radFrame" + i).html(i + 1).mouseover([i], previewFrame).mouseout([i], stopPreviewFrame).data("pos", i);
+          var radioLabel = $("<label />").attr("for", "radFrame" + i).attr("id", "lblFrame" + i).html(i + 1).mouseover([i], previewFrame).mouseout([i], stopPreviewFrame).data("pos", i);
           lstFrames.append(radio);
           lstFrames.append(radioLabel);
           
@@ -341,6 +341,11 @@
           checkboxSelectors[i].button("refresh");
         }
 
+        // Make sure we've scrolled to this frame.
+        lstFrames.scrollLeft(
+          $("#lblFrame" + currentFrame).offset().left - lstFrames.offset().left + lstFrames.scrollLeft()
+        );
+        
         // Re-draw the preview.
         drawPreview();
         
